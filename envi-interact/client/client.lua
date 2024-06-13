@@ -24,10 +24,6 @@ local currentPed = nil
 function OpenChoiceMenu(data)
     local timedOut = false
     currentMenuID = data.menuID
-    --storedKey[data.menuID] = nil
-    if awaitingResponse[data.menuID] then
-        return 'busy'
-    end
     if data.timeout then
         data.timeout = data.timeout * 1000
         SetTimeout(data.timeout, function()
@@ -38,7 +34,7 @@ function OpenChoiceMenu(data)
             end
         end)
     end
-    awaitingResponse[data.menuID] = true
+    --awaitingResponse[data.menuID] = true
     menuState[data.menuID] = true
     local serializableOptions = {}
     for i, option in ipairs(data.options) do
@@ -61,22 +57,7 @@ function OpenChoiceMenu(data)
         options = serializableOptions,
     })
     SetNuiFocus(true, true)
-    -- if menuOptionSelectedHandler then
-    --     RemoveEventHandler(menuOptionSelectedHandler)
-    -- end
-    -- menuOptionSelectedHandler = AddEventHandler('envi-interact:menuOptionSelected', function(pressedKey)
-    --     storedKey[data.menuID] = pressedKey
-    -- end)
-    -- while menuState[data.menuID] and storedKey[data.menuID] == nil and awaitingResponse[data.menuID] and not timedOut do
-    --     Wait(1000)
-    --     print('waiting for key')
-    -- end
-    -- awaitingResponse[data.menuID] = nil
-    -- if timedOut then
-    --     return 'timeout'
-    -- end
-    -- print('returning key', storedKey[data.menuID])
-    -- return storedKey[data.menuID]
+    return 'done'
 end
 
 
@@ -488,8 +469,6 @@ function CloseMenu(menuID, speech)
             menuOptionSelectedHandler = nil
         end
         currentPed = nil
-    else
-        print("Attempted to close a menu that was not open: " .. menuID)
     end
 end
 
@@ -578,7 +557,6 @@ RegisterNuiCallback('selectOption', function(data, cb)
     local speech = data.speech
     local reaction = data.reaction
     if reaction and currentPed then
-            print('stopping speech')
             StopCurrentPlayingAmbientSpeech(currentPed)
         Wait(500)
         PlayAmbientSpeech1(currentPed, reaction, 'SPEECH_PARAMS_STANDARD')
@@ -587,18 +565,19 @@ RegisterNuiCallback('selectOption', function(data, cb)
         UpdateSpeech(menuID, speech)
     end
     if callbackFunctions[menuID] and callbackFunctions[menuID][key] then
-        print(1)
         callbackFunctions[menuID][key](data)
         TriggerEvent('envi-interact:menuOptionSelected', key)  -- Trigger custom event with the key
-        cb(key)
+        cb(1)
     else
-        print(2)
         TriggerEvent('envi-interact:menuOptionSelected', key)  -- Trigger custom event with the key
-        cb(key)
+        cb(0)
         CloseMenu(menuID)
     end
 end)
 
+--- Registers a callback for when a slider value is confirmed in a NUI menu.
+---@param data table Data passed from the NUI containing the slider confirmation.
+---@param cb function Callback function to execute after confirmation.
 --- Registers a callback for when a slider value is confirmed in a NUI menu.
 ---@param data table Data passed from the NUI containing the slider confirmation.
 ---@param cb function Callback function to execute after confirmation.
@@ -613,23 +592,18 @@ RegisterNuiCallback('sliderConfirm', function(data, cb)
     else
         cb('lockSlider')
     end
-    print(table.type(sliderData[data.menuID].confirm))
     if not data or not data.menuID or not data.sliderValue then
         print("Error: invalid data received from NUI")
-        cb(0)
         return
     end
     if not sliderData[menuID] then
         print("Error: menuID not found in sliderData")
-        cb(0)
         return
     end
     local newValue = data.sliderValue
     local oldValue = sliderData[menuID].sliderValue
     sliderData[menuID].sliderValue = newValue
-
     sliderData[menuID].confirm(tonumber(newValue), tonumber(oldValue))
-    cb(1)
 end)
 
 RegisterNuiCallback('close', function(data, cb)

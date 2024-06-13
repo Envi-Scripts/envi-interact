@@ -1,0 +1,104 @@
+.choice__container,
+.slider__wrapper,
+.bubble__chat--container {
+  background: #1b1b1b;
+}
+
+.choice__title {
+  color: #fff;
+}
+
+.option__item .option__key,
+.option__item .option__content {
+  border: .1vh solid #fff;
+  background: linear-gradient(186deg, rgba(158, 158, 158, 0.4) -20.85%, rgba(255, 253, 253, 0.45) -20.83%, rgba(255, 255, 255, 0.24) 116.4%);
+  color: #fff;
+}
+
+.option__item:hover .option__key,
+.option__item.active .option__key,
+.option__item:hover .option__content,
+.option__item.active .option__content {
+  background: linear-gradient(360deg, rgba(43, 29, 110, 0.5) 0%, rgba(97, 65, 255, 0.185) 100%);
+  color: #fff;
+  box-shadow: 0 0 3px #fff, 0 0 6px #fff;
+}
+
+.option__item.disabled .option__key,
+.option__item.disabled .option__content {
+  border: .1vh solid #fff;
+  background: linear-gradient(186deg, rgba(158, 158, 158, 0.4) -20.85%, rgba(255, 253, 253, 0.45) -20.83%, rgba(255, 255, 255, 0.24) 116.4%);
+  color: #fff;
+  cursor: default;
+}
+
+.slider::-webkit-slider-runnable-track {
+  background: #fff;
+}
+
+.slider::-webkit-slider-thumb {
+  background-color: #fff;
+  border: .35vh solid rgb(68, 46, 175);
+  box-shadow: -407px 0 0 400px rgb(68, 46, 175);
+}
+
+.slider::-moz-range-thumb {
+  background-color: #fff;
+  border: .1vh solid rgb(42, 29, 110);
+  box-shadow: -407px 0 0 400px rgb(42, 29, 110);
+}
+
+.slider::-moz-range-track {
+  background: #fff;
+}
+
+.slider__submit {
+  border: .1vh solid #fff;
+  background: linear-gradient(186deg, rgba(158, 158, 158, 0.4) -20.85%, rgba(255, 253, 253, 0.45) -20.83%, rgba(255, 255, 255, 0.24) 116.4%);
+  color: #fff;
+}
+
+.slider__submit:hover {
+  background: linear-gradient(360deg, rgba(43, 29, 110, 0.5) 0%, rgba(97, 65, 255, 0.185) 100%);
+  box-shadow: 0 0 3px #fff, 0 0 6px #fff;
+}
+
+.slider__submit.locked {
+  background: linear-gradient(186deg, rgba(158, 158, 158, 0.4) -20.85%, rgba(255, 253, 253, 0.45) -20.83%, rgba(255, 255, 255, 0.24) 116.4%);  
+}
+
+.slider__content {
+  color: #fff;
+}
+
+.overlay {
+  background: linear-gradient(360deg, rgba(0, 0, 0, 0.5) 0%, rgba(97, 65, 255, 0.185) 100%);
+  border: .15vh solid #6f00ff;
+}
+
+.percentage__container {
+  background: #25272C;
+}
+
+.bubble__chat--content {
+  color: #fff;
+}
+
+.bubble__chat--container::before {
+  border-top: 1.45vh solid #6f00ff;
+}
+
+[data-tooltip]:before { 
+  border: .1vh solid rgb(255, 255, 255) !important;
+  background: linear-gradient(186deg, rgba(158, 158, 158, 0.4) -20.85%, rgba(255, 253, 253, 0.45) -20.83%, rgba(255, 255, 255, 0.24) 116.4%) !important;
+  border-radius: .4vh !important;
+  color: #fff !important;
+}
+
+[data-tooltip]:after { 
+  border-top-color: #ffffff !important;
+}
+
+[data-tooltip][class*="tooltip-bottom"]:after {
+  border-bottom-color: #ffffff !important;
+}

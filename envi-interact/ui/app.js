@@ -28,6 +28,7 @@ $(function() {
   };
 
   function createChoiceMenu(data) {
+    console.log('createChoiceMenu', data);
     if (currentMenuID) {
      // $(`.choice__menu[data-choice-menu="${currentMenuID}"]`).fadeOut("150", function() {
        // $(this).remove();
