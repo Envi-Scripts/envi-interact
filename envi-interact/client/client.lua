@@ -23,9 +23,8 @@ local currentPed = nil
 ---@return string The key of the selected option.
 function OpenChoiceMenu(data)
     local timedOut = false
-    local storedKey = {}
     currentMenuID = data.menuID
-    storedKey[data.menuID] = nil
+    --storedKey[data.menuID] = nil
     if awaitingResponse[data.menuID] then
         return 'busy'
     end
@@ -62,20 +61,22 @@ function OpenChoiceMenu(data)
         options = serializableOptions,
     })
     SetNuiFocus(true, true)
-    if menuOptionSelectedHandler then
-        RemoveEventHandler(menuOptionSelectedHandler)
-    end
-    menuOptionSelectedHandler = AddEventHandler('envi-interact:menuOptionSelected', function(pressedKey)
-        storedKey[data.menuID] = pressedKey
-    end)
-    while menuState[data.menuID] and storedKey[data.menuID] == nil and awaitingResponse[data.menuID] and not timedOut do
-        Wait(1000)
-    end
-    awaitingResponse[data.menuID] = nil
-    if timedOut then
-        return 'timeout'
-    end
-    return storedKey[data.menuID]
+    -- if menuOptionSelectedHandler then
+    --     RemoveEventHandler(menuOptionSelectedHandler)
+    -- end
+    -- menuOptionSelectedHandler = AddEventHandler('envi-interact:menuOptionSelected', function(pressedKey)
+    --     storedKey[data.menuID] = pressedKey
+    -- end)
+    -- while menuState[data.menuID] and storedKey[data.menuID] == nil and awaitingResponse[data.menuID] and not timedOut do
+    --     Wait(1000)
+    --     print('waiting for key')
+    -- end
+    -- awaitingResponse[data.menuID] = nil
+    -- if timedOut then
+    --     return 'timeout'
+    -- end
+    -- print('returning key', storedKey[data.menuID])
+    -- return storedKey[data.menuID]
 end
 
 
@@ -492,6 +493,12 @@ function CloseMenu(menuID, speech)
     end
 end
 
+-- Checks if any menu is open.
+---@return boolean - Whether any menu is open.
+function IsAnyMenuOpen()
+    return #menuState > 0
+end
+
 --- Closes all open menus.
 function CloseAllMenus()
     local openMenus = GetOpenMenus()
@@ -670,5 +677,5 @@ exports('CloseAllMenus', CloseAllMenus)
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
 exports('GetInteractionPed', GetInteractionPed)
-
+exports('IsAnyMenuOpen', IsAnyMenuOpen)
 

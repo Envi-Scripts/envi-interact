@@ -1,6 +1,7 @@
 let i = 0;
 let typingComplete = false;
 let currentMenuID = null;
+let keysBusy = false;
 
 $(function() {
   function typeWriter(textParam, callback, element) {
@@ -18,11 +19,11 @@ $(function() {
 
   function calculateDynamicDelay(length) {
     if (length <= 50) {
-        return 100;
+        return 80;
     } else if (length <= 100) {
-        return 75;
+        return 70;
     } else {
-        return 50;
+        return 60;
     }
   };
 
@@ -38,6 +39,7 @@ $(function() {
   }
 
   function displayNewMenu(data) {
+    keysBusy = false;
     i = 0;
     typingComplete = false;
     
@@ -83,12 +85,12 @@ $(function() {
     } else {
       typingComplete = true;
     };
-
     $(".choice__menu").fadeIn("150");
-
+    keysBusy = false;
     $(".option__item").on('click', function(e) {
       e.preventDefault();
       if (!typingComplete) return;
+      keysBusy = true;
       
       let getStayOpen = $(this).data('stay-open');
       let getCloseAll = $(this).data('close-all');
@@ -114,12 +116,18 @@ $(function() {
 
       closeMenuInternal(currentMenuID);
       currentMenuID = data.menuID;
+      setTimeout(() => {
+        keysBusy = false;
+      }, 1500);
 
     });
 
     $(document).off('keydown').on('keydown', function(e) {
-      if (!typingComplete) return;
-
+      if (!typingComplete || keysBusy) return;
+      keysBusy = true;
+      setTimeout(() => {
+        keysBusy = false;
+      }, 1500);
       const pressedKey = String.fromCharCode(e.which);
       const option = data.options.find(opt => opt.key === pressedKey);
       const speech = $(this).data('speech');
@@ -399,6 +407,7 @@ $(function() {
       case "openChoiceMenu":
         console.log("openChoiceMenu")
         createChoiceMenu(data);
+        break; // Added break here
       case "openPedMenu":
         createChoiceMenu(data);
         break;
