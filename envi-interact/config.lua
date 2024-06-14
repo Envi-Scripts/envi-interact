@@ -1,5 +1,6 @@
-TextState = false
-CurrentLabel = nil
+Config = {}
+Config.TextState = false
+Config.CurrentLabel = nil
 ShownNoti = false
 
 function ShowText(label, state, options)

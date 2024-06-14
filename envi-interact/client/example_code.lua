@@ -200,20 +200,36 @@ function BackToMain(data)
             },
             {
                 key = 'V',
-                label = 'Percentage Bar?',
-                speech = 'The "PercentageBar" export allows you to easily create a percentage bar that can be used to show the player a percentage of a value. This could be used for anything your heart desires!',
+                label = 'Envi-Interact',
+                speech = 'Envi-Interact is an easy to use API for FiveM that allows you to easily create interaction points, choice menus, sliders, and percentage bars.',
                 selected = function(data)
                     exports['envi-interact']:UpdateSpeech(data.menuID, 'Let\'s try it out!', 2000)
                     local startingPercentage = 50
-                    local bar = exports['envi-interact']:PercentageBar('percent-bar-name', startingPercentage, 'CURRENT RELATIONSHIP - '..startingPercentage..'%', 'top', 'hover')
+                    local bar = exports['envi-interact']:PercentageBar('percent-bar-name', startingPercentage, 'PERCENTAGE BAR TITLE - '..startingPercentage..'%', 'left', 'always')
                     exports['envi-interact']:OpenChoiceMenu({
                         title = 'Percentage Bar',
-                        speech = 'Let\'s start the value at 50%! - WOW, so many options!',
-                        menuID = 'choice-percentage-bar-test',
+                        speech = 'Envi-Interact is an easy to use API for FiveM that allows you to easily create interaction points, choice menus, sliders, and percentage bars -WOW, so many options!',
+                        menuID = 'choice-percentage-bar-test'..math.random(11111, 99999),
                         position = 'right',
                         options = {
                             {
                                 key = 'E',
+                                label = 'Have a conversation',  
+                                reaction = 'GENERIC_BYE',
+                                selected = function(data)
+                                    exports['envi-interact']:CloseAllMenus()
+                                end,
+                            },
+                            {
+                                key = 'R',
+                                label = 'Tell me a joke',
+                                reaction = 'GENERIC_BYE',
+                                selected = function(data)
+                                    exports['envi-interact']:CloseAllMenus()
+                                end,
+                            },
+                            {
+                                key = 'I',
                                 label = 'Increase Value - 5%',
                                 reaction = 'GENERIC_SHOCKED_MED',
                                 stayOpen = true,
@@ -277,17 +293,6 @@ function BackToMain(data)
                                 end,
                             },
                             {
-                                key = 'R',
-                                label = 'Reset Value - 50%',
-                                reaction = 'GENERIC_HOWS_IT_GOING',
-                                stayOpen = true,
-                                selected = function(data)
-                                    startingPercentage = 50
-                                    exports['envi-interact']:PercentageBar(bar, startingPercentage, 'CURRENT RELATIONSHIP - '..startingPercentage..'%', 'top', 'hover')
-                                    exports['envi-interact']:UpdateSpeech(data.menuID, 'The value is now back to ' .. startingPercentage .. '%!')
-                                end,
-                            },
-                            {
                                 key = 'C',
                                 label = 'Enter Custom Value',
                                 stayOpen = true,
@@ -327,7 +332,7 @@ function BackToMain(data)
                     exports['envi-interact']:OpenChoiceMenu({
                         title = 'InteractionPoint/ InteractionEntity?',
                         speech = '"InteractionPoint" and "InteractionEntity" are interaction points for our "Press E to Interact" system that supports multiple options and is fully optimized to run at 0.00ms - just as efficient as Target Systems! More entity options coming soon??',
-                        menuID = 'choice-interaction-point-test',
+                        menuID = 'choice-interaction-point-test'..math.random(11111, 99999),
                         position = 'right',
                         options = {
                             {
@@ -367,8 +372,8 @@ end
 local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
     name = 'testNPC',
     model = 'a_f_m_bevhills_01',
-    coords = vector3(-126.1001, -640.8299, 167.8204),
-    heading = 95.1730,
+    coords = vector3(-1338.8363, -1255.9933, 4.9441),
+    heading = 24.5156,
     isFrozen = true,
 }, {                -- Table of Choice Menu Data
     title = 'CreateNPC Export!',
@@ -591,7 +596,7 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
                 exports['envi-interact']:OpenChoiceMenu({
                     title = 'InteractionPoint/ InteractionEntity?',
                     speech = '"InteractionPoint" and "InteractionEntity" are interaction points for our "Press E to Interact" system that supports multiple options and is fully optimized to run at 0.00ms - just as efficient as Target Systems! More entity options coming soon??',
-                    menuID = 'choice-interaction-point-test-2',
+                    menuID = 'choice-interaction-point-test-2'..math.random(11111, 99999),
                     position = 'right',
                     options = {
                         {

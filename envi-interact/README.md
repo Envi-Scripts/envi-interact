@@ -1,8 +1,8 @@
 ## Documentation for `envi-interact`
 
-The `envi-interact` script provides a versatile interaction system for creating dynamic menus, handling NPC interactions, and managing UI elements in your FiveM Server.
+The `envi-interact` script provides a versatile interaction system for creating dynamic menus (such as multi-choice menus, speech bubbles, percentage bars, and sliders), easily handling NPC interactions, providing an optimized solution to 'Press E' interactions within in your FiveM Server.
 
-Below is a detailed guide on how to utilize the exported functions from this script in other resources.
+Below is a detailed guide on how to use the exported functions from this script in your other lua scripts/resources.
 
 ### Exported Functions
 
@@ -15,8 +15,9 @@ Opens a menu with multiple choice options.
   - `title` (string): The title of the menu.
   - `speech` (string): A speech or description associated with the menu. If false, the menu will be a simple choice menu.
   - `position` (string): The position on the screen (e.g., 'left', 'right').
-  - `timeout` (number): Time in seconds before the interaction is considered a failure and menu is closed.
-  - `options` (table): A list of options, each being a table with keys `key`, `label`, and `selected`.
+  - `timeout` (table): A table containing timeout configuration with keys `time` (number) and `closeEverything` (boolean).
+  - `options` (table): A list of options, each being a table with keys `key`, `label`, `selected`, `closeAll`, `speech`, and `reaction`.
+
 
   NOTE:
   Some options are only avaliable when use PedInteraction or CreateNPC ChoiceMenus such as:
@@ -32,7 +33,7 @@ exports['envi-interact']:OpenChoiceMenu({
   title = 'Decision Time',
   menuID = 'decision-menu',
   position = 'right',
-  timeout = 60,
+  timeout = {time = 60, closeEverything = true},
   options = {
     {   
       key = 'A',
@@ -56,8 +57,7 @@ exports['envi-interact']:OpenChoiceMenu({
 ```lua
 local optionChosen = exports['envi-interact']:OpenChoiceMenu({
   title = 'Decision Time',
-  speech = 'Choose your option wisely.',
-  menuID = 'decision-menu',
+  menuID = 'simple-decision-menu',
   position = 'right',
   options = {
     {   
@@ -81,11 +81,11 @@ end
 
 
 #### 2. `CreateNPC`
-Creates an NPC with specified attributes and interaction options.
+Creates an all-in-one NPC with specified attributes and interaction options.
 This will:
-- Spawn the NPC at the specified coordinates.
-- Add an InteractionPoint - (0.0ms Press E to Interact)
-- Open a choice menu when the NPC is interacted with.
+- Spawn the NPC
+- Set up Press E to interact keybind for the NPC
+- Set up a menu for the NPC to interact with the player
 
 **Parameters:**
 - `pedData` (table): Data about the NPC model and spawn location.
@@ -94,7 +94,7 @@ This will:
   - `heading` (number): Direction the NPC faces.
   - `isFrozen` (boolean): Whether the NPC should be immobile.
 - `interactionData` (table): Interaction options and UI settings.
-  - `title`, `speech`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`. - NOTE: MENUID MUST BE UNIQUE TO AVOID CONFLICTS
+  - `title`, `speech`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
 
@@ -111,9 +111,10 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
 }, {    -- Table of Choice Menu Data (interactionData)
   title = 'Greetings', 
   speech = 'Hello there! Let\'s choose an option. What would you like to talk about?', 
-  menuID = 'npc-greeting', 
+  menuID = 'npc-interaction-menu-1', 
   position = 'right',
   greeting = 'GENERIC_HI',
+  timeout = {time = 60},
   focusCam = true,
   options = {   -- Table of Choice Menu Options
     { 
@@ -131,7 +132,7 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
       reaction = 'GENERIC_SHOCKED_HIGH',
       selected = function(data)
         print('Talking about sports...')
-        exports['envi-interact']:CloseMenu(data.menuID)   -- To close the current menu after interaction
+        exports['envi-interact']:CloseAllMenus()   -- To close all menus after interaction
       end
     },
     {
@@ -139,7 +140,7 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
       label = 'Leave', 
       selected = function(data)
         print('Leaving the conversation...')
-        exports['envi-interact']:CloseMenu(data.menuID)   -- To close the current menu after interaction
+        exports['envi-interact']:CloseEverything()  -- To close all menus and percentage bars after interaction
       end
     }
   } 
@@ -147,15 +148,18 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
 ```
 
 
+
 #### 3. `PedInteraction`
 Handles interactions with a ped, typically used to initiate dialogues or actions.
 
 **Parameters:**
-- `ped` (entity): The ped entity to interact with.
-- `interactionData` (table): Interaction options and UI settings.
-  - `title`, `speech`, `menuID`, `position`,`timeout`, `options` as in `OpenChoiceMenu`. - NOTE: MENUID MUST BE UNIQUE TO AVOID CONFLICTS
+- `entity` (entity): The ped entity to interact with.
+- `data` (table): Interaction options and UI settings.
+  - `title`, `speech`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
+  - `freeze` (boolean): Whether the NPC should be frozen during interaction.
+
 
 **Example:**
 ```lua
@@ -168,27 +172,38 @@ exports['envi-interact']:PedInteraction(ped, {
   focusCam = true,
   options = {
     {
-    key = 'E',
-    label = 'Talk',
-    reaction = 'CHAT_STATE',
-    selected = function(data) 
-      print('Initiating conversation...')
-      exports['envi-interact']:CloseMenu(data.menuID)   -- To close the current menu after interaction
-    end,
+      key = 'E',
+      label = 'Talk',
+      reaction = 'CHAT_STATE',
+      selected = function(data) 
+        print('Initiating conversation...')
+        exports['envi-interact']:CloseMenu(data.menuID)  -- To close the current menu after interaction
+      end,
+    },
+    {
+      key = 'I',
+      label = 'Insult',
+      reaction = 'GENERIC_SHOCKED_HIGH',
+      selected = function(data)
+        print('Insulting the ped...')
+        exports['envi-interact']:CloseEverything()  -- To close all menus and percentage bars after interaction
+      end
+    }
   }
 })
 ```
 
 
-#### 5. `PercentageBar`
+#### 4. `PercentageBar`
 Displays a percentage bar on the screen.
 
 **Parameters:**
-- `menuID` (string): A unique identifier for the percentage bar. - NOTE: MUST BE UNIQUE TO AVOID CONFLICTS
+- `menuID` (string): A unique identifier for the percentage bar.
 - `percent` (number): The percentage value to display (0-100).
 - `title` (string): The title of the percentage bar.
 - `position` (string): The position on the screen.
 - `tooltip` (string, optional): Tooltip behavior ('hover', 'always', 'none').
+- `c1`, `c2`, `c3` (string, optional): Color values for different percentage ranges.
 
 **Returns:**
 - `string`: The menu ID of the percentage bar.
@@ -199,11 +214,11 @@ exports['envi-interact']:PercentageBar('relationship-bar', 75, 'Relationship Sta
 ```
 
 
-#### 6. `UseSlider`
+#### 5. `UseSlider`
 Allows interaction with a slider within a menu.
 
 **Parameters:**
-- `menuID` (string): The ID of the menu containing the slider. - NOTE: NEEDS TO MATCH THE MENU ID OF THE OPEN MENU
+- `menuID` (string): The ID of the menu containing the slider.
 - `data` (table): Configuration for the slider.
   - `title` (string): Title of the slider.
   - `min`, `max` (number): Minimum and maximum values.
@@ -229,7 +244,77 @@ exports['envi-interact']:UseSlider('decision-menu', {
 ```
 
 
-#### 7. `InteractionPoint` and `InteractionEntity`
+#### 6. `CloseMenu`
+Closes a specific menu by its ID.
+
+**Parameters:**
+- `menuID` (string): The ID of the menu to close. - NOTE: NEEDS TO MATCH THE MENU ID OF THE OPEN MENU
+
+**Example:**
+```lua
+exports['envi-interact']:CloseMenu('decision-menu')
+```
+
+
+#### 7. `CloseAllMenus`
+Closes all currently open menus.
+
+**Example:**
+```lua
+exports['envi-interact']:CloseAllMenus()
+```
+
+
+#### 8. `CloseAllPercentBars`
+Closes all open percentage bars.
+
+**Example:**
+```lua
+exports['envi-interact']:CloseAllPercentBars()
+```
+
+
+#### 9. `GetOpenMenus`
+Returns a table of all open menus.
+
+**Example:**
+```lua
+local openMenus = exports['envi-interact']:GetOpenMenus()
+print(json.encode(openMenus, { indent = true }))
+```
+
+
+#### 10. `IsAnyMenuOpen`
+Returns a boolean value indicating if any menus are open.
+
+**Example:**
+```lua
+local isAnyMenuOpen = exports['envi-interact']:IsAnyMenuOpen()
+print(isAnyMenuOpen)
+```
+
+#### 11. `IsAnyPercentBarOpen`
+Returns a boolean value indicating if any percentage bars are open.
+
+**Example:**
+```lua
+local isAnyPercentBarOpen = exports['envi-interact']:IsAnyPercentBarOpen()
+print(isAnyPercentBarOpen)
+```
+
+#### 12. `GetInteractionPed`
+Returns the ped entity that is interacting with the player.
+
+**Parameters:**
+- `menuID` (string): The ID of the menu to get the ped entity from.
+
+**Example:**
+```lua
+local interactionPed = exports['envi-interact']:GetInteractionPed('npc-interaction-menu-1')
+print('entity = ', interactionPed)
+```
+
+#### 13. `InteractionPoint` and `InteractionEntity`
 These functions enable a raycasting-based interaction system, allowing players to press 'E' to interact with points or entities in the game world. This system supports multiple options which you may select using the scroll-wheel and runs at 0.00ms constantly, ensuring minimal performance impact without the use of a target system.
 
 
@@ -319,7 +404,7 @@ exports['envi-interact']:InteractionEntity(entity, {
 })
 ```
 
-#### 8. `UpdateSpeech`
+#### 14. `UpdateSpeech`
 Updates the speech of a specific menu.
 
 **Parameters:**
@@ -329,24 +414,4 @@ Updates the speech of a specific menu.
 **Example:**
 ```lua
 exports['envi-interact']:UpdateSpeech('decision-menu', 'New speech text to display here.')
-```
-
-#### 9. `CloseMenu`
-Closes a specific menu by its ID.
-
-**Parameters:**
-- `menuID` (string): The ID of the menu to close. - NOTE: NEEDS TO MATCH THE MENU ID OF THE OPEN MENU
-
-**Example:**
-```lua
-exports['envi-interact']:CloseMenu('decision-menu')
-```
-
-
-#### 10. `CloseAllMenus`
-Closes all currently open menus.
-
-**Example:**
-```lua
-exports['envi-interact']:CloseAllMenus()
 ```

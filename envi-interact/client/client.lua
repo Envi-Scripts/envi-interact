@@ -18,7 +18,7 @@ local waitingForSpeech = {}
 local currentMenuID = nil
 local currentPercentageBarID = nil
 local currentPed = nil
-
+ 
 --- Opens a choice menu with given parameters.
 ---@param data table Table containing menu options like title, menuID, timeout table, and options list.
 ---@return string The key of the selected option.
@@ -40,7 +40,6 @@ function OpenChoiceMenu(data)
             end
         end)
     end
-    --awaitingResponse[data.menuID] = true
     menuState[data.menuID] = true
     local serializableOptions = {}
     for i, option in ipairs(data.options) do
@@ -217,6 +216,8 @@ function GetOpenMenus()
     return menuState
 end
 
+--- Returns the currently open percentage bar IDs and their states.
+---@return table -- A table containing the IDs of all currently open percentage bars and their states.
 function GetOpenPercentBars()
     if not next(percentState) then
         return {}
@@ -319,6 +320,9 @@ function PercentageBar(menuID, percent, title, position, tooltip, c1, c2, c3)
     return menuID
 end
 
+--- Returns the ped associated with a menu ID.
+---@param menuID string The ID of the menu to get the ped from.
+---@return any The ped associated with the menu ID.
 function GetInteractionPed(menuID)
     return interactionPeds[menuID]
 end
@@ -504,10 +508,13 @@ function IsAnyMenuOpen()
     return #menuState > 0
 end
 
+-- Checks if any percentage bar is open.
+---@return boolean - Whether any percentage bar is open.
 function IsAnyPercentBarOpen()
     return #percentState > 0
 end
 
+-- Closes all open menus and percentage bars.
 function CloseEverything()
     CloseAllMenus()
     CloseAllPercentBars()
@@ -526,6 +533,7 @@ function CloseAllMenus()
     end
 end
 
+-- Closes all open percentage bars.
 function CloseAllPercentBars()
     local openPercentBars = GetOpenPercentBars()
     if not openPercentBars then
@@ -595,8 +603,8 @@ end, false)
 
 
 RegisterKeyMapping('+interact', 'Envi-Interact - Interact', 'keyboard', 'E')
-RegisterKeyMapping('+scrollDown', 'Envi-Interact - Scroll Down', 'MOUSE_BUTTONANY', 'IOM_WHEEL_DOWN')
-RegisterKeyMapping('+scrollUp', 'Envi-Interact - Scroll Up', 'MOUSE_BUTTONANY', 'IOM_WHEEL_UP')
+RegisterKeyMapping('+scrollDown', 'Envi-Interact - Scroll Down', 'MOUSE_WHEEL', 'IOM_WHEEL_DOWN')
+RegisterKeyMapping('+scrollUp', 'Envi-Interact - Scroll Up', 'MOUSE_WHEEL', 'IOM_WHEEL_UP')
 
 --- Registers a callback for when an option is selected in a NUI menu.
 ---@param data table Data passed from the NUI containing the selected option.
@@ -625,9 +633,7 @@ RegisterNuiCallback('selectOption', function(data, cb)
     end
 end)
 
---- Registers a callback for when a slider value is confirmed in a NUI menu.
----@param data table Data passed from the NUI containing the slider confirmation.
----@param cb function Callback function to execute after confirmation.
+
 --- Registers a callback for when a slider value is confirmed in a NUI menu.
 ---@param data table Data passed from the NUI containing the slider confirmation.
 ---@param cb function Callback function to execute after confirmation.
