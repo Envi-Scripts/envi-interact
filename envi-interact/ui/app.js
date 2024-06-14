@@ -28,7 +28,6 @@ $(function() {
   };
 
   function createChoiceMenu(data) {
-    console.log('createChoiceMenu', data);
     if (currentMenuID) {
      // $(`.choice__menu[data-choice-menu="${currentMenuID}"]`).fadeOut("150", function() {
        // $(this).remove();
@@ -141,9 +140,6 @@ $(function() {
 
         let getStayOpen = $activeItem.data('stay-open');
         let getCloseAll = $activeItem.data('close-all');
-        // console.log('getStayOpen', getStayOpen);
-        // console.log('getCloseAll', getCloseAll);
-
         if (!getStayOpen) {
           $(".choice__menu").fadeOut("150");
         }
@@ -169,7 +165,6 @@ $(function() {
 
       if (option) {
         const $activeItem = $(`.option__item[data-key="${option.key}"]`);
-        console.log('option', option.key);
         $activeItem.removeClass('active');
       }
     });
@@ -406,7 +401,6 @@ $(function() {
   
     switch (data.action) {
       case "openChoiceMenu":
-        console.log("openChoiceMenu")
         createChoiceMenu(data);
         break; // Added break here
       case "openPedMenu":

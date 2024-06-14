@@ -1,5 +1,6 @@
 local debug = false
 local menuState = {}
+local percentState = {}
 local sliderData = {}
 local interactionPoints = {}
 local cam
@@ -19,17 +20,22 @@ local currentPercentageBarID = nil
 local currentPed = nil
 
 --- Opens a choice menu with given parameters.
----@param data table Table containing menu options like title, menuID, and options list.
+---@param data table Table containing menu options like title, menuID, timeout table, and options list.
 ---@return string The key of the selected option.
 function OpenChoiceMenu(data)
     local timedOut = false
     currentMenuID = data.menuID
-    if data.timeout then
-        data.timeout = data.timeout * 1000
-        SetTimeout(data.timeout, function()
+    if data.timeout and data.timeout.time then
+        data.timeout.time = data.timeout.time * 1000
+        SetTimeout(data.timeout.time, function()
             if menuState[data.menuID] then
-                print('Choice Menu timed out after ' .. data.timeout / 1000 .. ' seconds')
-                CloseMenu(data.menuID)
+                print('Choice Menu timed out after ' .. data.timeout.time / 1000 .. ' seconds')
+                if data.timeout.closeEverything then
+                    CloseEverything()
+                else
+                    CloseMenu(data.menuID)
+                    CloseMenu(currentMenuID)
+                end
                 timedOut = true
             end
         end)
@@ -110,12 +116,17 @@ function PedInteraction(entity, data)
     currentPed = entity
     local timedOut = false
     menuState[data.menuID] = true
-    if data.timeout then
-        data.timeout = data.timeout * 1000
-        SetTimeout(data.timeout, function()
+    if data.timeout and data.timeout.time then
+        data.timeout.time = data.timeout.time * 1000
+        SetTimeout(data.timeout.time, function()
             if menuState[data.menuID] then
-                print('Ped Interaction timed out after ' .. data.timeout / 1000 .. ' seconds')
-                CloseMenu(data.menuID)
+                print('Choice Menu timed out after ' .. data.timeout.time / 1000 .. ' seconds')
+                if data.timeout.closeEverything then
+                    CloseEverything()
+                else
+                    CloseMenu(data.menuID)
+                    CloseMenu(currentMenuID)
+                end
                 timedOut = true
             end
         end)
@@ -206,6 +217,13 @@ function GetOpenMenus()
     return menuState
 end
 
+function GetOpenPercentBars()
+    if not next(percentState) then
+        return {}
+    end
+    return percentState
+end
+
 --- Allows user interaction with a slider within a menu.
 ---@param menuID string The ID of the menu containing the slider.
 ---@param data table Table containing slider options like initial and new values.
@@ -283,7 +301,7 @@ function PercentageBar(menuID, percent, title, position, tooltip, c1, c2, c3)
     if percent > 100 then
         percent = 100
     end
-    menuState[menuID] = true
+    percentState[menuID] = true
     currentPercentageBarID = menuID
     SendNUIMessage({
         percentID = menuID,
@@ -455,7 +473,7 @@ function CloseMenu(menuID, speech)
         SendNUIMessage({
             action = 'closeMenu',
             menuID = menuID,
-            percentID = menuID
+            percentID = 'none'
         })
         menuState[menuID] = nil
         if cam then
@@ -470,12 +488,29 @@ function CloseMenu(menuID, speech)
         end
         currentPed = nil
     end
+    if percentState[menuID] then
+        SendNUIMessage({
+            action = 'closeMenu',
+            menuID = 'none',
+            percentID = menuID
+        })
+        percentState[menuID] = nil
+    end
 end
 
 -- Checks if any menu is open.
 ---@return boolean - Whether any menu is open.
 function IsAnyMenuOpen()
     return #menuState > 0
+end
+
+function IsAnyPercentBarOpen()
+    return #percentState > 0
+end
+
+function CloseEverything()
+    CloseAllMenus()
+    CloseAllPercentBars()
 end
 
 --- Closes all open menus.
@@ -488,6 +523,21 @@ function CloseAllMenus()
         for menuID, _ in pairs(openMenus) do
             CloseMenu(menuID)
         end
+    end
+end
+
+function CloseAllPercentBars()
+    local openPercentBars = GetOpenPercentBars()
+    if not openPercentBars then
+        print('No percentage bars are open')
+        return
+    else
+        for percentID, _ in pairs(openPercentBars) do
+            CloseMenu(percentID)
+        end
+    end
+    if currentPercentageBarID then
+        CloseMenu(currentPercentageBarID)
     end
 end
 
@@ -635,21 +685,44 @@ RegisterCommand('toggleDebug', function()
     end
 end, false)
 
+RegisterCommand('testCloseEverything', function()
+    CloseEverything()
+end, false)
+
+RegisterCommand('testCloseAllMenus', function()
+    CloseAllMenus()
+end, false)
+
+RegisterCommand('testCloseAllPercentBars', function()
+    CloseAllPercentBars()
+end, false)
+
+
 RegisterKeyMapping('toggleDebug', 'Envi-Interact - Debug Vision', 'keyboard', 'RMENU')
 
 --- Exports functions to be accessible from other scripts.
 exports('OpenChoiceMenu', OpenChoiceMenu)
-exports('CreateNPC', CreateNPC)
-exports('PedInteraction', PedInteraction)
-exports('PercentageBar', PercentageBar)
-exports('GetOpenMenus', GetOpenMenus)
+
 exports('UseSlider', UseSlider)
 exports('ForceUpdateSlider', ForceUpdateSlider)
+
+exports('PedInteraction', PedInteraction)
 exports('UpdateSpeech', UpdateSpeech)
+
+exports('CreateNPC', CreateNPC)
+
+exports('PercentageBar', PercentageBar)
+
+exports('GetOpenMenus', GetOpenMenus)
+exports('IsAnyPercentBarOpen', IsAnyPercentBarOpen)
+exports('IsAnyMenuOpen', IsAnyMenuOpen)
+
+exports('CloseEverything', CloseEverything)
+exports('CloseAllPercentBars', CloseAllPercentBars)
 exports('CloseMenu', CloseMenu)
 exports('CloseAllMenus', CloseAllMenus)
+
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
 exports('GetInteractionPed', GetInteractionPed)
-exports('IsAnyMenuOpen', IsAnyMenuOpen)
 
