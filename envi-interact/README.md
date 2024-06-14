@@ -2,6 +2,9 @@
 
 The `envi-interact` script provides a versatile interaction system for creating dynamic menus (such as multi-choice menus, speech bubbles, percentage bars, and sliders), easily handling NPC interactions, providing an optimized solution to 'Press E' interactions within in your FiveM Server.
 
+![Alt text](https://media.discordapp.net/attachments/1174950183570776075/1250773951320162399/image.png?ex=666d7b04&is=666c2984&hm=578ece92a1ba05e1008580266d4db442d6766e102234dadf7ff3eccf3aa2f5e1&=&format=webp&quality=lossless&width=2493&height=1334)
+
+
 Below is a detailed guide on how to use the exported functions from this script in your other lua scripts/resources.
 
 ### Exported Functions
