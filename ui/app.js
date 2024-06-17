@@ -20,16 +20,6 @@ $(function() {
     }
   
     type();
-  }
-  
-  function calculateDynamicDelay(length) {
-    if (length <= 50) {
-        return 80;
-    } else if (length <= 100) {
-        return 70;
-    } else {
-        return 60;
-    }
   };
 
   function createChoiceMenu(data) {
@@ -41,7 +31,7 @@ $(function() {
     } else {
       displayNewMenu(data);
     }
-  }
+  };
 
   function displayNewMenu(data) {
     keysBusy = false;
@@ -408,7 +398,7 @@ $(function() {
     switch (data.action) {
       case "openChoiceMenu":
         createChoiceMenu(data);
-        break; // Added break here
+        break;
       case "openPedMenu":
         createChoiceMenu(data);
         break;
@@ -431,7 +421,6 @@ $(function() {
         updatePercentageBar(data);
         break;    
       default:
-        // console.log(data);
         break;
     }
   });
