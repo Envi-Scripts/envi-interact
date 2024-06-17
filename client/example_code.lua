@@ -2,7 +2,7 @@ RegisterCommand('testChoice', function()
     exports['envi-interact']:OpenChoiceMenu({  -- Using 'selected' function to execute code when the option is pressed -- does not return result when selected functions are used
         title = 'Pick A Choice?',
         speech = 'OxLib Inspired theme to complement everyone\'s favorite menu system!',
-        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+        
         menuID = 'choice-menu-testChoice',
         position = 'right',
         options = {
@@ -43,7 +43,9 @@ RegisterCommand('testChoice2', function()   -- Alternative way to use if you wan
     local key = exports['envi-interact']:OpenChoiceMenu({
         title = 'Pick A Choice?',
         speech = 'This is a long test speech to evaluate the text rendering capabilities of the system and to ensure that the speech bubble can handle longer strings of text without any issues.',
-        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+        speechOptions = {
+            duration = 1000,
+}, -- Amount of TICKS the type writer takes to show all the speech text
         menuID = 'choice-menu-testChoice2',
         position = 'right',
         options = {
@@ -69,7 +71,9 @@ RegisterCommand('testChoice2', function()   -- Alternative way to use if you wan
         local key2 = exports['envi-interact']:OpenChoiceMenu({ -- Opening a second choice menu to test the functionality
             title = 'Pick Another Choice?',
             speech = 'This is an EVEN LONGER test speech to evaluate the text rendering capabilities of the system and to ensure that the speech bubble can handle longer strings of text without any issues.',
-            duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+            speechOptions = {
+                duration = 1000,  -- Amount of TICKS (MS) the type writer takes to show all the speech text
+            },
             menuID = 'choice-menu-testChoice-E',
             position = 'right',
             options = {
@@ -132,7 +136,9 @@ function BackToMain(data)
     exports['envi-interact']:OpenChoiceMenu({
         title = 'Main Menu!',
         speech = 'What else would you like to know?',
-        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+        speechOptions = {
+            duration = 1000,
+        },
         menuID = 'choice-backToMain'..math.random(11111, 99999),
         position = 'right',
         options = {
@@ -213,7 +219,9 @@ function BackToMain(data)
                     exports['envi-interact']:OpenChoiceMenu({
                         title = 'Percentage Bar',
                         speech = 'Envi-Interact is an easy to use API for FiveM that allows you to easily create interaction points, choice menus, sliders, and percentage bars -WOW, so many options!',
-                        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                        speechOptions = {
+                        duration = 1000,
+                        },
                         menuID = 'choice-percentage-bar-test'..math.random(11111, 99999),
                         position = 'right',
                         options = {
@@ -337,7 +345,9 @@ function BackToMain(data)
                     exports['envi-interact']:OpenChoiceMenu({
                         title = 'InteractionPoint/ InteractionEntity?',
                         speech = '"InteractionPoint" and "InteractionEntity" are interaction points for our "Press E to Interact" system that supports multiple options and is fully optimized to run at 0.00ms - just as efficient as Target Systems! More entity options coming soon??',
-                        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                        speechOptions = {
+                            duration = 1000,
+                        },
                         menuID = 'choice-interaction-point-test'..math.random(11111, 99999),
                         position = 'right',
                         options = {
@@ -384,7 +394,9 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
 }, {                -- Table of Choice Menu Data
     title = 'CreateNPC Export!',
     speech = 'Hello! - Welcome to Envi-Interact! I\'m an NPC created using the "CreateNPC" Export!',
-    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+    speechOptions = {
+        duration = 1000,
+    },
     menuID = 'choice-menu-test-1',
     greeting = 'GENERIC_HI',
     position = 'right',
@@ -434,7 +446,9 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
                         exports['envi-interact']:OpenChoiceMenu({
                             title = 'You Selected: ' .. new,
                             speech = 'I hope you know more about Envi-Interact Sliders now!',
-                            duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                            speechOptions = {
+                                duration = 1000,
+                            },
                             menuID = 'choice-slider-test-2',
                             position = 'right',
                             options = {
@@ -476,7 +490,9 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
                 exports['envi-interact']:OpenChoiceMenu({
                     title = 'Percentage Bar',
                     speech = 'Let\'s start the value at 50%! - WOW, so many options!',
-                    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                    speechOptions = {
+                        duration = 1000,
+                    },
                     menuID = 'choice-percentage-bar-test-2',
                     position = 'right',
                     options = {
@@ -605,7 +621,9 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
                 exports['envi-interact']:OpenChoiceMenu({
                     title = 'InteractionPoint/ InteractionEntity?',
                     speech = '"InteractionPoint" and "InteractionEntity" are interaction points for our "Press E to Interact" system that supports multiple options and is fully optimized to run at 0.00ms - just as efficient as Target Systems! More entity options coming soon??',
-                    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                    speechOptions = {
+                        duration = 1000,
+                    },
                     menuID = 'choice-interaction-point-test-2'..math.random(11111, 99999),
                     position = 'right',
                     options = {
@@ -704,7 +722,9 @@ local npcRelationship = 30
                     exports['envi-interact']:OpenChoiceMenu({
                         title = 'Sale Agreed!',
                         speech = 'Sounds like a deal! That\'ll cost you $' .. currentOffer .. '!',
-                        duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                        speechOptions = {
+                            duration = 1000,
+                        },
                         menuID = 'choice-menu3',
                         position = 'right',
                         options = {
@@ -759,7 +779,9 @@ local npcRelationship = 30
                                 exports['envi-interact']:OpenChoiceMenu({
                                     title = 'Sale Agreed!',
                                     speech = 'Sounds like a deal! That\'ll cost you $' .. currentOffer .. '!',
-                                    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                                    speechOptions = {
+                                        duration = 1000,
+                                    },
                                     menuID = 'choice-menu',
                                     position = 'right',
                                     options = {
@@ -797,7 +819,9 @@ local npcRelationship = 30
                                 exports['envi-interact']:OpenChoiceMenu({
                                     title = 'Final Offer!',
                                     speech = 'No way! I can\'t sell you this item for $' .. currentOffer .. '! The lowest I can take is $' .. willAccept .. '!',
-                                    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                                    speechOptions = {
+                                        duration = 1000,
+                                    },
                                     menuID = 'choice-menu',
                                     position = 'right',
                                     options = {
@@ -810,7 +834,9 @@ local npcRelationship = 30
                                                 exports['envi-interact']:OpenChoiceMenu({
                                                     title = 'Sale Agreed!',
                                                     speech = 'Sounds like a deal! That\'ll cost you $' .. currentOffer .. '!',
-                                                    duration = 1000, -- Amount of TICKS the type writer takes to show all the speech text
+                                                    speechOptions = {
+                                                        duration = 1000,
+                                                    },
                                                     menuID = 'choice-menu-agreed',
                                                     position = 'right',
                                                     options = {

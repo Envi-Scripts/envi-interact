@@ -48,10 +48,15 @@ function OpenChoiceMenu(data)
             label = option.label,
             closeAll = option.closeAll or nil,
             speech = option.speech or nil,
+            speechOptions = option.speechOptions or nil,
             reaction = option.reaction or nil
         }
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
+    end
+    local duration = Config.DefaultTypeDelay
+    if data.speechOptions and data.speechOptions.duration then
+        duration = data.speechOptions.duration
     end
     SendNUIMessage({
         action = 'openChoiceMenu',
@@ -59,7 +64,8 @@ function OpenChoiceMenu(data)
         title = data.title,
         menuID = data.menuID,
         position = data.position,
-        duration = data.duration or Config.DefaultTypeDelay,
+        speechOptions = data.speechOptions or nil,
+        duration = duration,
         options = serializableOptions,
     })
     SetNuiFocus(true, true)
@@ -112,7 +118,7 @@ end
 ---@param entity any The entity involved in the interaction.
 ---@param data table Table containing interaction options like slider state, speech, and position.
 ---@return boolean Returns false if the menu timed out - true if all menus are closed after interaction.
-function PedInteraction(entity, data, duration)
+function PedInteraction(entity, data)
     currentPed = entity
     local timedOut = false
     menuState[data.menuID] = true
@@ -166,6 +172,10 @@ function PedInteraction(entity, data, duration)
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
     end
+    local duration = Config.DefaultTypeDelay
+    if data.speechOptions and data.speechOptions.duration then
+        duration = data.speechOptions.duration
+    end
     SendNUIMessage({
         action = 'openPedMenu',
         title = data.title,
@@ -174,7 +184,8 @@ function PedInteraction(entity, data, duration)
         sliderState = data.sliderState or 'disabled', -- default slider state (options: 'locked', 'unlocked', 'disabled')
         sliderValue = data.sliderValue or false,
         speech = data.speech or false,
-        duration = duration or Config.DefaultTypeDelay,
+        speechOptions = data.speechOptions or nil,
+        duration = duration,
         options = serializableOptions
     })
     SetNuiFocus(true, true)
