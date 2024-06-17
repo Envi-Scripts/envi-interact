@@ -85,9 +85,10 @@ $(function() {
           $(".option__item").removeClass('disabled');
           $('.slider__wrapper').find(".slider").prop('disabled', false).removeClass('locked');
           $('.slider__wrapper').find(".slider__submit").prop('disabled', false).removeClass('locked');
-        }, `#text-${data.menuID}`);
+        }, `#text-${data.menuID}`, data.duration);
       });
-    } else {
+    }
+     else {
       typingComplete = true;
     };
     $(".choice__menu").fadeIn("150");
@@ -191,7 +192,7 @@ $(function() {
       $.post('https://envi-interact/speechComplete', JSON.stringify({
         menuID: data.menuID
       }));
-    }, textElement);
+    }, textElement, data.duration);
   };
 
   function useSlider(data) {
