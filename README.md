@@ -18,6 +18,7 @@ Opens a menu with multiple choice options.
   - `title` (string): The title of the menu.
   - `speech` (string): A speech or description associated with the menu. If false, the menu will be a simple choice menu.
   - `position` (string): The position on the screen (e.g., 'left', 'right').
+  - `duration` (int): The duration it takes for the speech to show from start to end
   - `timeout` (table): A table containing timeout configuration with keys `time` (number) and `closeEverything` (boolean).
   - `options` (table): A list of options, each being a table with keys `key`, `label`, `selected`, `closeAll`, `speech`, and `reaction`.
 
@@ -97,7 +98,7 @@ This will:
   - `heading` (number): Direction the NPC faces.
   - `isFrozen` (boolean): Whether the NPC should be immobile.
 - `interactionData` (table): Interaction options and UI settings.
-  - `title`, `speech`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
+  - `title`, `speech`, `duration`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
 
@@ -114,6 +115,7 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
 }, {    -- Table of Choice Menu Data (interactionData)
   title = 'Greetings', 
   speech = 'Hello there! Let\'s choose an option. What would you like to talk about?', 
+  duration = 3000,
   menuID = 'npc-interaction-menu-1', 
   position = 'right',
   greeting = 'GENERIC_HI',
@@ -158,7 +160,7 @@ Handles interactions with a ped, typically used to initiate dialogues or actions
 **Parameters:**
 - `entity` (entity): The ped entity to interact with.
 - `data` (table): Interaction options and UI settings.
-  - `title`, `speech`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
+  - `title`, `speech`, `duration`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
   - `freeze` (boolean): Whether the NPC should be frozen during interaction.
@@ -169,6 +171,7 @@ Handles interactions with a ped, typically used to initiate dialogues or actions
 exports['envi-interact']:PedInteraction(ped, {
   title = 'Greetings',  
   speech = 'Hello there! Let\'s choose an option. What would you like to talk about?',
+  duration = 2000,
   menuID = 'npc-interaction',
   position = 'right',
   greeting = 'GENERIC_HI',
@@ -413,8 +416,9 @@ Updates the speech of a specific menu.
 **Parameters:**
 - `menuID` (string): The ID of the menu to update. - NOTE: NEEDS TO MATCH THE MENU ID OF THE OPEN MENU
 - `speech` (string): The new speech to display.
+- `duration` (int): The duration it takes for the speech to show from start to end
 
 **Example:**
 ```lua
-exports['envi-interact']:UpdateSpeech('decision-menu', 'New speech text to display here.')
+exports['envi-interact']:UpdateSpeech('decision-menu', 'New speech text to display here.', 3000)
 ```

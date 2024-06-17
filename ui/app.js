@@ -4,19 +4,24 @@ let currentMenuID = null;
 let keysBusy = false;
 
 $(function() {
-  function typeWriter(textParam, callback, element) {
-    let text1 = textParam;
-    let dynamicDelay = calculateDynamicDelay(text1.length);
-
-    if (i < text1.length) {
-      $(element).append(text1.charAt(i));
-      i++;
-      setTimeout(() => typeWriter(text1, callback, element), dynamicDelay);
-    } else {
-      callback();
+  function typeWriter(textParam, callback, element, totalDuration) {
+    let i = 0;
+    const text = textParam;
+    const dynamicDelay = totalDuration / text.length;
+  
+    function type() {
+      if (i < text.length) {
+        $(element).append(text.charAt(i));
+        i++;
+        setTimeout(type, dynamicDelay);
+      } else {
+        callback();
+      }
     }
-  };  
-
+  
+    type();
+  }
+  
   function calculateDynamicDelay(length) {
     if (length <= 50) {
         return 80;
@@ -80,9 +85,10 @@ $(function() {
           $(".option__item").removeClass('disabled');
           $('.slider__wrapper').find(".slider").prop('disabled', false).removeClass('locked');
           $('.slider__wrapper').find(".slider__submit").prop('disabled', false).removeClass('locked');
-        }, `#text-${data.menuID}`);
+        }, `#text-${data.menuID}`, data.duration);
       });
-    } else {
+    }
+     else {
       typingComplete = true;
     };
     $(".choice__menu").fadeIn("150");
@@ -186,7 +192,7 @@ $(function() {
       $.post('https://envi-interact/speechComplete', JSON.stringify({
         menuID: data.menuID
       }));
-    }, textElement);
+    }, textElement, data.duration);
   };
 
   function useSlider(data) {

@@ -59,6 +59,7 @@ function OpenChoiceMenu(data)
         title = data.title,
         menuID = data.menuID,
         position = data.position,
+        duration = data.duration or Config.DefaultTypeDelay,
         options = serializableOptions,
     })
     SetNuiFocus(true, true)
@@ -111,7 +112,7 @@ end
 ---@param entity any The entity involved in the interaction.
 ---@param data table Table containing interaction options like slider state, speech, and position.
 ---@return boolean Returns false if the menu timed out - true if all menus are closed after interaction.
-function PedInteraction(entity, data)
+function PedInteraction(entity, data, duration)
     currentPed = entity
     local timedOut = false
     menuState[data.menuID] = true
@@ -173,6 +174,7 @@ function PedInteraction(entity, data)
         sliderState = data.sliderState or 'disabled', -- default slider state (options: 'locked', 'unlocked', 'disabled')
         sliderValue = data.sliderValue or false,
         speech = data.speech or false,
+        duration = duration or Config.DefaultTypeDelay,
         options = serializableOptions
     })
     SetNuiFocus(true, true)
@@ -273,10 +275,11 @@ end
 -- Updates the speech bubble for a menu.
 ---@param menuID string The ID of the menu to update the speech bubble for.
 ---@param speech string The new speech bubble text.
-function UpdateSpeech(menuID, speech)
+function UpdateSpeech(menuID, speech, duration)
     SendNUIMessage({
         menuID = menuID,
         action = 'updateSpeech',
+        duration = duration or Config.DefaultTypeDelay,
         speech = speech
     })
     waitingForSpeech[menuID] = true
@@ -731,4 +734,3 @@ exports('CloseAllMenus', CloseAllMenus)
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
 exports('GetInteractionPed', GetInteractionPed)
-
