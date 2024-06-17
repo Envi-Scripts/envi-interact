@@ -4,19 +4,24 @@ let currentMenuID = null;
 let keysBusy = false;
 
 $(function() {
-  function typeWriter(textParam, callback, element) {
-    let text1 = textParam;
-    let dynamicDelay = calculateDynamicDelay(text1.length);
-
-    if (i < text1.length) {
-      $(element).append(text1.charAt(i));
-      i++;
-      setTimeout(() => typeWriter(text1, callback, element), dynamicDelay);
-    } else {
-      callback();
+  function typeWriter(textParam, callback, element, totalDuration) {
+    let i = 0;
+    const text = textParam;
+    const dynamicDelay = totalDuration / text.length;
+  
+    function type() {
+      if (i < text.length) {
+        $(element).append(text.charAt(i));
+        i++;
+        setTimeout(type, dynamicDelay);
+      } else {
+        callback();
+      }
     }
-  };  
-
+  
+    type();
+  }
+  
   function calculateDynamicDelay(length) {
     if (length <= 50) {
         return 80;
