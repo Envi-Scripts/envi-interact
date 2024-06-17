@@ -1,6 +1,7 @@
 Config = {}
 Config.TextState = false
 Config.CurrentLabel = nil
+Config.DefaultTypeDelay = 3000 -- 3 Seconds
 ShownNoti = false
 
 function ShowText(label, state, options)
