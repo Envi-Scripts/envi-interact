@@ -48,10 +48,15 @@ function OpenChoiceMenu(data)
             label = option.label,
             closeAll = option.closeAll or nil,
             speech = option.speech or nil,
+            speechOptions = option.speechOptions or nil,
             reaction = option.reaction or nil
         }
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
+    end
+    local duration = Config.DefaultTypeDelay
+    if data.speechOptions and data.speechOptions.duration then
+        duration = data.speechOptions.duration
     end
     SendNUIMessage({
         action = 'openChoiceMenu',
@@ -59,6 +64,8 @@ function OpenChoiceMenu(data)
         title = data.title,
         menuID = data.menuID,
         position = data.position,
+        speechOptions = data.speechOptions or nil,
+        duration = duration,
         options = serializableOptions,
     })
     SetNuiFocus(true, true)
@@ -165,6 +172,10 @@ function PedInteraction(entity, data)
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
     end
+    local duration = Config.DefaultTypeDelay
+    if data.speechOptions and data.speechOptions.duration then
+        duration = data.speechOptions.duration
+    end
     SendNUIMessage({
         action = 'openPedMenu',
         title = data.title,
@@ -173,6 +184,8 @@ function PedInteraction(entity, data)
         sliderState = data.sliderState or 'disabled', -- default slider state (options: 'locked', 'unlocked', 'disabled')
         sliderValue = data.sliderValue or false,
         speech = data.speech or false,
+        speechOptions = data.speechOptions or nil,
+        duration = duration,
         options = serializableOptions
     })
     SetNuiFocus(true, true)
@@ -273,10 +286,11 @@ end
 -- Updates the speech bubble for a menu.
 ---@param menuID string The ID of the menu to update the speech bubble for.
 ---@param speech string The new speech bubble text.
-function UpdateSpeech(menuID, speech)
+function UpdateSpeech(menuID, speech, duration)
     SendNUIMessage({
         menuID = menuID,
         action = 'updateSpeech',
+        duration = duration or Config.DefaultTypeDelay,
         speech = speech
     })
     waitingForSpeech[menuID] = true
@@ -731,4 +745,3 @@ exports('CloseAllMenus', CloseAllMenus)
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
 exports('GetInteractionPed', GetInteractionPed)
-
