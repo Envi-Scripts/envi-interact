@@ -497,6 +497,7 @@ function CloseMenu(menuID, speech)
         if cam then
             SetCamActive(cam, false)
             RenderScriptCams(false, true, 1000, 1, 1)
+            DestroyCam(cam, true)
         end
         cam = nil
         SetNuiFocus(false, false)
