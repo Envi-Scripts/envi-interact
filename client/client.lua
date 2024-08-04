@@ -375,6 +375,7 @@ function InteractionEntity(entity, data)
                 distance = data[1].distance,
                 margin = data[1].margin,
                 currentOption = 1,
+                
                 entity = entity or nil
             }
             for _, option in ipairs(data[1].options) do
@@ -497,7 +498,6 @@ function CloseMenu(menuID, speech)
         if cam then
             SetCamActive(cam, false)
             RenderScriptCams(false, true, 1000, 1, 1)
-            DestroyCam(cam, true)
         end
         cam = nil
         SetNuiFocus(false, false)
@@ -599,6 +599,21 @@ RegisterCommand('+scrollDown', function()
     ShowText(currentLabel, true, currentPointData.options)
 end, false)
 
+RegisterCommand('-scrollUp', function()
+    return
+end, false)
+
+RegisterCommand('+interact', function()
+    if not currentPointData or not currentPointData.options then
+        return
+    end
+    currentPointData.options[currentPointData.currentOption].selected(currentPointData)
+end, false)
+
+RegisterCommand('-interact', function()
+    return
+end, false)
+
 RegisterCommand('+scrollUp', function()
     if not currentPointData or not currentPointData.options then
         return
@@ -614,6 +629,10 @@ RegisterCommand('+scrollUp', function()
     end
     currentLabel = currentPointData.options[currentPointData.currentOption].label
     ShowText(currentLabel, true, currentPointData.options)
+end, false)
+
+RegisterCommand('-scrollDown', function()
+    return
 end, false)
 
 

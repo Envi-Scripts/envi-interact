@@ -1,0 +1,108 @@
+.choice__container,
+.slider__wrapper,
+.bubble__chat--container {
+  background: rgba(19, 21, 23, 0.8); 
+  border: 1px solid #9400D3; /* Neon purple border */
+  box-shadow: 0 0 10px #9400D3; 
+}
+
+.choice__title {
+  color: #9400D3; /* Neon purple */
+  text-shadow: 0 0 5px #9400D3; 
+}
+
+.option__item .option__key,
+.option__item .option__content {
+  background: rgba(47, 48, 53, 0.8); 
+  color: #BCBDC1;
+}
+
+.option__item:hover .option__key,
+.option__item.active .option__key,
+.option__item:hover .option__content,
+.option__item.active .option__content {
+  background: rgba(70, 75, 82, 0.8); 
+  color: #BDBEC2;
+}
+
+.option__item.disabled .option__key,
+.option__item.disabled .option__content {
+  background: rgba(47, 48, 53, 0.8); 
+  color: #BCBDC1;
+  cursor: default;
+}
+
+.slider::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.8); 
+}
+
+.slider::-webkit-slider-thumb {
+  background-color: #9400D3; /* Neon purple */
+  border: .35vh solid #585f68;
+  box-shadow: -407px 0 0 400px #585f68;
+}
+
+.slider::-moz-range-thumb {
+  background-color: #9400D3; /* Neon purple */
+  border: .1vh solid #585f68;
+  box-shadow: -407px 0 0 400px #585f68;
+}
+
+.slider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.8); 
+}
+
+.slider__submit {
+  background: rgba(47, 48, 53, 0.8); 
+  color: #BCBDC1;
+  border: 1px solid #9400D3; /* Neon purple border */
+  box-shadow: 0 0 10px #9400D3; 
+}
+
+.slider__submit:hover {
+  background: rgba(70, 75, 82, 0.8); 
+  color: #BDBEC2;
+}
+
+.slider__submit.locked {
+  background: rgba(47, 48, 53, 0.8); 
+}
+
+.slider__content {
+  color: #9400D3; /* Neon purple */
+  text-shadow: 0 0 5px #9400D3; 
+}
+
+.overlay {
+  background: linear-gradient(360deg, rgba(19, 21, 23, 0.5) 0%, rgba(19, 21, 23, 0.185) 100%); 
+}
+
+.percentage__container {
+  background: rgba(37, 39, 44, 0.8); 
+  border: 1px solid #9400D3; /* Neon purple border */
+  box-shadow: 0 0 10px #9400D3; 
+}
+
+.bubble__chat--content {
+  color: #9400D3; /* Neon purple */
+  text-shadow: 0 0 5px #9400D3; 
+}
+
+.bubble__chat--container::before {
+  border-top: 1.45vh solid #9400D3; /* Neon purple */
+  box-shadow: 0 0 10px #9400D3; 
+}
+
+[data-tooltip]:before { 
+  background: rgba(19, 21, 23, 0.8) !important; 
+  color: #9400D3 !important; /* Neon purple */
+  text-shadow: 0 0 5px #9400D3 !important; 
+}
+
+[data-tooltip]:after { 
+  border-top-color: #9400D3 !important; /* Neon purple */
+}
+
+[data-tooltip][class*="tooltip-bottom"]:after {
+  border-bottom-color: #9400D3 !important; /* Neon purple */
+}
