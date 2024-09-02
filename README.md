@@ -21,6 +21,7 @@ Opens a menu with multiple choice options.
       - `duration` (number): The duration it takes for the speech to show from start to end
   - `position` (string): The position on the screen (e.g., 'left', 'right').
   - `timeout` (table): A table containing timeout configuration with keys `time` (number) and `closeEverything` (boolean).
+  - `onESC` (function): A function to be called when the ESC key is used to close the menu.
   - `options` (table): A list of options, each being a table with keys `key`, `label`, `selected`, `closeAll`, `speech`, and `reaction`.
 
 
@@ -39,6 +40,9 @@ exports['envi-interact']:OpenChoiceMenu({
   menuID = 'decision-menu',
   position = 'right',
   timeout = {time = 60, closeEverything = true},
+  onESC = function()
+    print('ESC key pressed')
+  end,
   options = {
     {   
       key = 'A',
@@ -64,6 +68,9 @@ local optionChosen = exports['envi-interact']:OpenChoiceMenu({
   title = 'Decision Time',
   menuID = 'simple-decision-menu',
   position = 'right',
+  onESC = function()
+    print('ESC key pressed')
+  end,
   options = {
     {   
       key = 'A',
@@ -99,7 +106,7 @@ This will:
   - `heading` (number): Direction the NPC faces.
   - `isFrozen` (boolean): Whether the NPC should be immobile.
 - `interactionData` (table): Interaction options and UI settings.
-  - `title`, `speech`, `speechOptions`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
+  - `title`, `speech`, `speechOptions`, `menuID`, `position`, `timeout`, `options`, `onESC` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
 
@@ -124,6 +131,9 @@ local npc = exports['envi-interact']:CreateNPC({ -- Table of NPC Attributes (ped
   greeting = 'GENERIC_HI',
   timeout = {time = 60},
   focusCam = true,
+  onESC = function()
+    print('ESC key pressed')
+  end,
   options = {   -- Table of Choice Menu Options
     { 
       key = 'E',
@@ -163,7 +173,7 @@ Handles interactions with a ped, typically used to initiate dialogues or actions
 **Parameters:**
 - `entity` (entity): The ped entity to interact with.
 - `data` (table): Interaction options and UI settings.
-  - `title`, `speech`, `speechOptions`, `menuID`, `position`, `timeout`, `options` as in `OpenChoiceMenu`.
+  - `title`, `speech`, `speechOptions`, `menuID`, `position`, `timeout`, `options`, `onESC` as in `OpenChoiceMenu`.
   - `focusCam` (boolean): Whether the camera should focus on the NPC when interacting.
   - `greeting` (string): The VOICE PARAM to use when interacting.
   - `freeze` (boolean): Whether the NPC should be frozen during interaction.
@@ -178,6 +188,9 @@ exports['envi-interact']:PedInteraction(ped, {
   position = 'right',
   greeting = 'GENERIC_HI',
   focusCam = true,
+  onESC = function()
+    print('ESC key pressed')
+  end,
   options = {
     {
       key = 'E',
