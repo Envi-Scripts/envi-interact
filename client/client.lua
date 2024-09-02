@@ -174,6 +174,7 @@ function PedInteraction(entity, data)
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
     end
+    callbackFunctions[data.menuID].onESC = data.onESC
     local duration = Config.DefaultTypeDelay
     if data.speechOptions and data.speechOptions.duration then
         duration = data.speechOptions.duration
@@ -188,7 +189,8 @@ function PedInteraction(entity, data)
         speech = data.speech or false,
         speechOptions = data.speechOptions or nil,
         duration = duration,
-        options = serializableOptions
+        options = serializableOptions,
+        onESC = data.onESC ~= nil
     })
     SetNuiFocus(true, true)
     local wait = 1000
@@ -722,6 +724,8 @@ RegisterNuiCallback('escPressed', function(data, cb)
     local menuID = data.menuID
     if callbackFunctions[menuID] and callbackFunctions[menuID].onESC then
         callbackFunctions[menuID].onESC()
+    else
+        CloseMenu(menuID)
     end
     cb(1)
 end)
