@@ -161,6 +161,11 @@ $(function() {
         }));
       } else if (e.which === 27) {
         e.preventDefault();
+        if (data.onESC) {
+          $.post('https://envi-interact/escPressed', JSON.stringify({
+            menuID: data.menuID
+          }));
+        }
         closeAllMenus();
       }
     });

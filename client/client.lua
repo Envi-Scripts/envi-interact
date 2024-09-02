@@ -54,6 +54,7 @@ function OpenChoiceMenu(data)
         callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
         callbackFunctions[data.menuID][option.key] = option.selected
     end
+    callbackFunctions[data.menuID].onESC = data.onESC
     local duration = Config.DefaultTypeDelay
     if data.speechOptions and data.speechOptions.duration then
         duration = data.speechOptions.duration
@@ -67,6 +68,7 @@ function OpenChoiceMenu(data)
         speechOptions = data.speechOptions or nil,
         duration = duration,
         options = serializableOptions,
+        onESC = data.onESC ~= nil
     })
     SetNuiFocus(true, true)
     return 'done'
@@ -531,8 +533,8 @@ end
 
 -- Closes all open menus and percentage bars.
 function CloseEverything()
-    CloseAllMenus()
     CloseAllPercentBars()
+    CloseAllMenus()
 end
 
 --- Closes all open menus.
@@ -714,6 +716,14 @@ RegisterNUICallback('speechComplete', function(data)
     if waitingForSpeech[data.menuID] then
         waitingForSpeech[data.menuID] = nil
     end
+end)
+
+RegisterNuiCallback('escPressed', function(data, cb)
+    local menuID = data.menuID
+    if callbackFunctions[menuID] and callbackFunctions[menuID].onESC then
+        callbackFunctions[menuID].onESC()
+    end
+    cb(1)
 end)
 
 RegisterCommand('toggleDebug', function()

@@ -2,7 +2,9 @@ RegisterCommand('testChoice', function()
     exports['envi-interact']:OpenChoiceMenu({  -- Using 'selected' function to execute code when the option is pressed -- does not return result when selected functions are used
         title = 'Pick A Choice?',
         speech = 'OxLib Inspired theme to complement everyone\'s favorite menu system!',
-        
+        onESC = function()
+            print('ESC pressed to close menu')
+        end,
         menuID = 'choice-menu-testChoice',
         position = 'right',
         options = {
