@@ -18,6 +18,8 @@ local waitingForSpeech = {}
 local currentMenuID = nil
 local currentPercentageBarID = nil
 local currentPed = nil
+local lastOptionSelected = 0
+local optionCooldown = 2000 -- 2 seconds
  
 --- Opens a choice menu with given parameters.
 ---@param data table Table containing menu options like title, menuID, timeout table, and options list.
@@ -648,6 +650,13 @@ RegisterKeyMapping('+scrollUp', 'Envi-Interact - Scroll Up', 'MOUSE_WHEEL', 'IOM
 ---@param data table Data passed from the NUI containing the selected option.
 ---@param cb function Callback function to execute after selection.
 RegisterNuiCallback('selectOption', function(data, cb)
+    local currentTime = GetGameTimer()
+    if currentTime - lastOptionSelected < optionCooldown then
+        cb(0)
+        return
+    end
+    lastOptionSelected = currentTime
+    
     local menuID = data.menuID
     local key = data.key
     local speech = data.speech
