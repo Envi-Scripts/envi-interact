@@ -20,6 +20,7 @@ local currentPercentageBarID = nil
 local currentPed = nil
 local lastOptionSelected = 0
 local optionCooldown = 2000 -- 2 seconds
+
  
 --- Opens a choice menu with given parameters.
 ---@param data table Table containing menu options like title, menuID, timeout table, and options list.
@@ -34,9 +35,11 @@ function OpenChoiceMenu(data)
                 print('Choice Menu timed out after ' .. data.timeout.time / 1000 .. ' seconds')
                 if data.timeout.closeEverything then
                     CloseEverything()
+                    currentMenuID = nil
                 else
                     CloseMenu(data.menuID)
                     CloseMenu(currentMenuID)
+                    currentMenuID = nil
                 end
                 timedOut = true
             end
@@ -133,9 +136,11 @@ function PedInteraction(entity, data)
                 print('Choice Menu timed out after ' .. data.timeout.time / 1000 .. ' seconds')
                 if data.timeout.closeEverything then
                     CloseEverything()
+                    currentMenuID = nil
                 else
                     CloseMenu(data.menuID)
                     CloseMenu(currentMenuID)
+                    currentMenuID = nil
                 end
                 timedOut = true
             end
@@ -207,6 +212,7 @@ function PedInteraction(entity, data)
         end
         if distance > 5.0 then
             CloseMenu(data.menuID)
+            currentMenuID = nil
             break
         end
         Wait(wait)
@@ -214,6 +220,7 @@ function PedInteraction(entity, data)
     if data.freeze then
         FreezeEntityPosition(entity, false)
     end
+    currentMenuID = nil
     return not timedOut
 end
 
@@ -501,6 +508,7 @@ function CloseMenu(menuID, speech)
             percentID = 'none'
         })
         menuState[menuID] = nil
+        currentMenuID = nil
         if cam then
             SetCamActive(cam, false)
             RenderScriptCams(false, true, 1000, 1, 1)
@@ -526,7 +534,7 @@ end
 -- Checks if any menu is open.
 ---@return boolean - Whether any menu is open.
 function IsAnyMenuOpen()
-    return #menuState > 0
+    return currentMenuID ~= nil
 end
 
 -- Checks if any percentage bar is open.
@@ -539,6 +547,7 @@ end
 function CloseEverything()
     CloseAllPercentBars()
     CloseAllMenus()
+    currentMenuID = nil
 end
 
 --- Closes all open menus.
@@ -552,6 +561,7 @@ function CloseAllMenus()
             CloseMenu(menuID)
         end
     end
+    currentMenuID = nil
 end
 
 -- Closes all open percentage bars.
