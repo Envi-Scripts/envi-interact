@@ -2,7 +2,7 @@ fx_version 'cerulean'
 
 author 'Envi-Scripts'
 description 'Interaction Menus'
-version '1.1.7'
+version '1.1.8'
 
 game 'gta5'
 lua54 'yes'
