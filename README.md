@@ -344,7 +344,7 @@ These functions enable a raycasting-based interaction system, allowing players t
 - `options` (table): Interaction options.
   - `name` (string): The name of the interaction point.
   - `distance` (number): The maximum distance at which the interaction point will be active.
-  - `margin` (number): The margin around the interaction point that will be active.
+  - `radius` (number): The radius around the interaction point that will be active.
 
 **Example:**
 ```lua
@@ -388,7 +388,7 @@ exports['envi-interact']:InteractionPoint(vector3(100, 100, 20), {
 - `options` (table): Interaction options.
   - `name` (string): The name of the interaction point.
   - `distance` (number): The maximum distance at which the interaction point will be active.
-  - `margin` (number): The margin around the interaction point that will be active.
+  - `radius` (number): The radius around the interaction point that will be active.
 
 **Example:**
 ```lua

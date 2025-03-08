@@ -102,19 +102,18 @@ function CreateNPC(pedData, interactionData)
         SetBlockingOfNonTemporaryEvents(ped, true)
         SetEntityInvincible(ped, true)
     end
-    InteractionEntity(ped,{
+    InteractionEntity(ped, {
         {
             name = interactionData.menuID,
             distance = interactionData.distance or 2.0,
-            margin = interactionData.margin or 0.2,
+            radius = interactionData.radius or 1.5,
             options = {
                 {
                     label = '[E] - Talk',
                     selected = function(data)
                         PedInteraction(ped, interactionData)
                     end,
-                },
-                
+                }
             }
         }
     })
@@ -365,8 +364,8 @@ function InteractionPoint(position, data)
                 position = position,
                 options = {},
                 distance = data.distance,
-                margin = data.margin,
                 currentOption = 1,
+                radius = data.radius or 1.0, -- Add radius parameter with default of 1.0
             }
             for _, option in ipairs(data.options) do
                 table.insert(interactionPoints[data.name].options, option)
@@ -386,9 +385,8 @@ function InteractionEntity(entity, data)
                 name = data[1].name,
                 options = {},
                 distance = data[1].distance,
-                margin = data[1].margin,
                 currentOption = 1,
-                
+                radius = data[1].radius or 1.0, -- Add radius parameter with default of 1.0
                 entity = entity or nil
             }
             for _, option in ipairs(data[1].options) do
@@ -448,33 +446,37 @@ CreateThread(function()
         local closestPoint = nil
         local minDistance = math.huge
         local hit, hitPosition, hitEntity = RayCastGamePlayCamera(200)
+        local coords = GetEntityCoords(ped)
+
         if debug and hit and hitPosition and not closestPoint then
             DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 255, 0, 0, 100)
         end
-        if hitEntity then
-            local coords = GetEntityCoords(ped)
-            for _, npc in pairs(interactionPedData) do
-                local distance = #(coords - GetEntityCoords(npc.entity))
-                if npc.entity == hitEntity and distance < npc.distance and distance < minDistance then
-                    minDistance = distance
-                    closestPoint = npc
-                    if debug and closestPoint and hitEntity == npc.entity then
-                        DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
-                    end
-                end
-            end
-            for _, interactionPoint in pairs(interactionPoints) do
-                local distance = #(coords - interactionPoint.position)
-                local distance2 = #(hitPosition - interactionPoint.position)
-                if distance < interactionPoint.distance and distance < minDistance and distance2 < interactionPoint.distance then
-                    minDistance = distance
-                    closestPoint = interactionPoint
-                    if debug and closestPoint then
-                        DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
-                    end
+
+        for _, npc in pairs(interactionPedData) do
+            local entityCoords = GetEntityCoords(npc.entity)
+            local distance = #(coords - entityCoords)
+            local hitDistance = #(hitPosition - entityCoords)
+            if distance < npc.distance and hitDistance < (npc.radius or 1.0) and distance < minDistance then
+                minDistance = distance
+                closestPoint = npc
+                if debug and closestPoint then
+                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
                 end
             end
         end
+
+        for _, interactionPoint in pairs(interactionPoints) do
+            local distance = #(coords - interactionPoint.position)
+            local hitDistance = #(hitPosition - interactionPoint.position)
+            if distance < interactionPoint.distance and distance < minDistance and hitDistance < (interactionPoint.radius or 1.0) then
+                minDistance = distance
+                closestPoint = interactionPoint
+                if debug and closestPoint then
+                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                end
+            end
+        end
+
         if closestPoint then
             if lastPointData ~= closestPoint then
                 lastPointData = closestPoint

@@ -937,7 +937,7 @@ local npcRelationship = 30
     exports['envi-interact']:InteractionPoint(vector3(-136.4381, -629.6122, 168.8205),{
         name = 'testInteractionPoint',
         distance = 1.0,
-        margin = 1.0,
+        radius = 1.0,
         options = {
             {
                 label = 'Check Center Cupboard',
