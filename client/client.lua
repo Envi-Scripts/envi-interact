@@ -145,6 +145,12 @@ function PedInteraction(entity, data)
             end
         end)
     end
+     if data.faceme then
+        TaskTurnPedToFaceEntity(entity, PlayerPedId(), 1000)
+        Wait(1000)
+        ClearPedTasks(entity)
+        TaskStandStill(entity, 10000)
+    end
     if data.freeze then
         FreezeEntityPosition(entity, true)
     end
