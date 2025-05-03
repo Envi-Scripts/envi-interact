@@ -381,3 +381,14 @@ body {
 [data-tooltip].tooltip-none:before {
     display: none !important;
 }
+
+.option__item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.option__item.disabled .option__key,
+.option__item.disabled .option__label {
+  color: #666;
+} 

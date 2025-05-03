@@ -437,3 +437,52 @@ Updates the speech of a specific menu.
 ```lua
 exports['envi-interact']:UpdateSpeech('decision-menu', 'New speech text to display here.', 3000)
 ```
+
+## Functions
+
+### InteractionModel
+Creates an interaction point for any instance of a specific model in the game world. This is useful for creating interactions with props or objects that can appear multiple times in the world.
+
+```lua
+exports['envi-interact']:InteractionModel(modelHash, {
+    {
+        name = 'interaction_name',
+        distance = 2.0, -- Optional: Maximum distance for interaction
+        radius = 1.5,   -- Optional: Interaction radius
+        options = {
+            {
+                label = '[E] - Interact',
+                selected = function(data)
+                    -- Handle interaction
+                end,
+            }
+        }
+    }
+})
+```
+
+Example usage:
+```lua
+-- Create an interaction for all ATMs
+exports['envi-interact']:InteractionModel(GetHashKey('prop_atm_01'), {
+    {
+        name = 'atm_interaction',
+        distance = 2.0,
+        radius = 1.5,
+        options = {
+            {
+                label = '[E] - Use ATM',
+                selected = function(data)
+                    -- Open ATM menu
+                end,
+            }
+        }
+    }
+})
+```
+
+Key features:
+- Works with any instance of the specified model in the game world
+- Automatically detects when the player is looking at the model
+- Supports the same interaction options as other interaction types
+- Useful for creating interactions with props, vehicles, or other world objects

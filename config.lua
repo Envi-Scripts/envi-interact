@@ -1,7 +1,8 @@
 Config = {}
 Config.TextState = false
 Config.CurrentLabel = nil
-Config.DefaultTypeDelay = 3000 -- 3 Seconds
+Config.DefaultTypeDelay = 2000 -- 2 Seconds
+Config.EnableDebugLine = false
 ShownNoti = false
 
 function ShowText(label, state, options)
@@ -41,4 +42,6 @@ function ShowText(label, state, options)
     end
 end
 
-
+function HideText()
+    lib.hideTextUI()
+end

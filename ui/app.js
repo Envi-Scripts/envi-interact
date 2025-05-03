@@ -7,7 +7,8 @@ $(function() {
   function typeWriter(textParam, callback, element, totalDuration) {
     let i = 0;
     const text = textParam;
-    const dynamicDelay = totalDuration / text.length;
+    const baseDelay = calculateDynamicDelay(text.length);
+    const dynamicDelay = totalDuration ? (totalDuration / text.length) : baseDelay;
   
     function type() {
       if (i < text.length) {
@@ -24,11 +25,11 @@ $(function() {
   
   function calculateDynamicDelay(length) {
     if (length <= 50) {
-        return 80;
+        return 40;
     } else if (length <= 100) {
-        return 70;
+        return 30;
     } else {
-        return 60;
+        return 20;
     }
   };
 
@@ -60,7 +61,7 @@ $(function() {
           <div class="choice__title">${data.title}</div>
           <div class="option__wrapper">
             ${data.options.map(option => `
-              <div class="option__item disabled" data-key="${option.key}" data-stay-open="${option.stayOpen}" data-close-all=${option.closeAll}>
+              <div class="option__item" data-key="${option.key}" data-stay-open="${option.stayOpen}" data-close-all=${option.closeAll}>
                 <div class="option__key">${option.key}</div>
                 <div class="option__content">${option.label}</div>
               </div>
@@ -177,6 +178,30 @@ $(function() {
       if (option) {
         const $activeItem = $(`.option__item[data-key="${option.key}"]`);
         $activeItem.removeClass('active');
+      }
+    });
+
+    data.options.forEach(option => {
+      const optionElement = `
+        <div class="option__item" data-key="${option.key}" data-stay-open="${option.stayOpen || false}" data-close-all="${option.closeAll || false}">
+          <div class="option__key">${option.key}</div>
+          <div class="option__label">${option.label}</div>
+        </div>
+      `;
+      $(".choice__menu__options").append(optionElement);
+    });
+
+    data.options.forEach(option => {
+      if (option.canSee) {
+        $.post('https://envi-interact/selectOption', JSON.stringify({
+          menuID: data.menuID,
+          key: option.key,
+          checkcanSee: true
+        }), function(response) {
+          if (response === 0) {
+            $(`.option__item[data-key="${option.key}"]`).addClass('disabled');
+          }
+        });
       }
     });
 

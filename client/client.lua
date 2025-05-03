@@ -9,7 +9,6 @@ local callbackFunctions = {}
 local interactionPeds = {}
 local spawnedPeds = {}
 local wait = 1250
-local awaitingResponse = {}
 local menuOptionSelectedHandler = nil
 local scrollCooldown = 250
 local scrollCooldownTimer = 0
@@ -19,9 +18,42 @@ local currentMenuID = nil
 local currentPercentageBarID = nil
 local currentPed = nil
 local lastOptionSelected = 0
+local lastInteraction = 0
 local optionCooldown = 2000 -- 2 seconds
+local interactionPedData = {}
+local interactionModelData = {}
 
- 
+local speechCategories = {
+    ["PositiveReaction"] = PositiveReaction,
+    ["NegativeReaction"] = NegativeReaction,
+    ["AngryReaction"] = AngryReaction,
+    ["NeutralReaction"] = NeutralReaction,
+    ["ScaredReaction"] = ScaredReaction,
+    ["Hello"] = Hello,
+    ["Bye"] = Bye,
+    ["Yes"] = Yes,
+    ["No"] = No,
+    ["Thanks"] = Thanks,
+    ["OverThere"] = OverThere,
+    ["Conversation"] = Conversation,
+    ["Apology"] = Apology,
+    ["HitCar"] = HitCar,
+    ["Tour"] = Tour
+}
+
+local function PlaySpeech(ped, speech, params)
+    CreateThread(function()
+        if speechCategories[speech] then
+            local category = speechCategories[speech]
+            local random = math.random(1, #category)
+            speech = category[random]
+        end
+        PlayPedAmbientSpeechNative(ped, speech, params)
+    end)
+end
+
+exports("PlaySpeech", PlaySpeech)
+
 --- Opens a choice menu with given parameters.
 ---@param data table Table containing menu options like title, menuID, timeout table, and options list.
 ---@return string The key of the selected option.
@@ -38,8 +70,9 @@ function OpenChoiceMenu(data)
                     currentMenuID = nil
                 else
                     CloseMenu(data.menuID)
-                    CloseMenu(currentMenuID)
-                    currentMenuID = nil
+                    if currentMenuID == data.menuID then
+                        currentMenuID = nil
+                    end
                 end
                 timedOut = true
             end
@@ -47,17 +80,24 @@ function OpenChoiceMenu(data)
     end
     menuState[data.menuID] = true
     local serializableOptions = {}
+    local filteredOptions = {}
     for i, option in ipairs(data.options) do
-        serializableOptions[i] = {
-            key = option.key,
-            label = option.label,
-            closeAll = option.closeAll or nil,
-            speech = option.speech or nil,
-            speechOptions = option.speechOptions or nil,
-            reaction = option.reaction or nil
-        }
-        callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
-        callbackFunctions[data.menuID][option.key] = option.selected
+        local shouldInclude = true
+        if option.canSee then
+            shouldInclude = option.canSee()
+        end
+        if shouldInclude then
+            table.insert(filteredOptions, {
+                key = option.key,
+                label = option.label,
+                closeAll = option.closeAll or nil,
+                speech = option.speech or nil,
+                speechOptions = option.speechOptions or nil,
+                reaction = option.reaction or nil
+            })
+            callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
+            callbackFunctions[data.menuID][option.key] = option.selected
+        end
     end
     callbackFunctions[data.menuID].onESC = data.onESC
     local duration = Config.DefaultTypeDelay
@@ -72,15 +112,12 @@ function OpenChoiceMenu(data)
         position = data.position,
         speechOptions = data.speechOptions or nil,
         duration = duration,
-        options = serializableOptions,
+        options = filteredOptions,
         onESC = data.onESC ~= nil
     })
     SetNuiFocus(true, true)
     return 'done'
 end
-
-
-local interactionPedData = {}
 
 --- Creates a NPC with the given data and interaction options.
 ---@param pedData table Table containing ped data like model, coordinates, and heading.
@@ -125,6 +162,11 @@ end
 ---@param data table Table containing interaction options like slider state, speech, and position.
 ---@return boolean Returns false if the menu timed out - true if all menus are closed after interaction.
 function PedInteraction(entity, data)
+    local currentTime = GetGameTimer()
+    if currentTime - lastInteraction < 1000 then
+        return false
+    end
+    lastInteraction = currentTime
     currentPed = entity
     local timedOut = false
     menuState[data.menuID] = true
@@ -138,8 +180,9 @@ function PedInteraction(entity, data)
                     currentMenuID = nil
                 else
                     CloseMenu(data.menuID)
-                    CloseMenu(currentMenuID)
-                    currentMenuID = nil
+                    if currentMenuID == data.menuID then
+                        currentMenuID = nil
+                    end
                 end
                 timedOut = true
             end
@@ -154,7 +197,7 @@ function PedInteraction(entity, data)
     if data.focusCam then
         local coords = GetEntityCoords(PlayerPedId())
         local entCoords = GetEntityCoords(entity)
-        local screenCoords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.9, 0.55) -- Adjusted to focus nicely on the computer screen
+        local screenCoords = GetOffsetFromEntityInWorldCoords(entity, 0.0, 0.9, 0.55)
         local dist = #(coords - entCoords)
         if dist < 8.0 then
             cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
@@ -165,21 +208,50 @@ function PedInteraction(entity, data)
         end
     end
     if data.greeting then
-        PlayPedAmbientSpeechNative(entity, data.greeting, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+        PlaySpeech(entity, data.greeting, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
     end
     local serializableOptions = {}
+    local filteredOptions = {}
     for i, option in ipairs(data.options) do
-        serializableOptions[i] = {
-            key = option.key,
-            label = option.label,
-            stayOpen = option.stayOpen or false,
-            closeAll = option.closeAll or false,
-            speech = option.speech or nil,
-            reaction = option.reaction or nil
-        }
-        callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
-        callbackFunctions[data.menuID][option.key] = option.selected
+        local shouldInclude = true
+        if option.canSee then
+            shouldInclude = option.canSee()
+        end
+        if shouldInclude then
+            table.insert(filteredOptions, {
+                key = option.key,
+                label = option.label,
+                stayOpen = option.stayOpen or false,
+                closeAll = option.closeAll or false,
+                speech = option.speech or nil,
+                reaction = option.reaction or nil
+            })
+            callbackFunctions[data.menuID] = callbackFunctions[data.menuID] or {}
+            callbackFunctions[data.menuID][option.key] = option.selected
+        end
     end
+
+    -- Check if there are no available options
+    if #filteredOptions == 0 then
+        SendNUIMessage({
+            action = 'openPedMenu',
+            title = data.title,
+            menuID = data.menuID,
+            position = data.position,
+            speech = "I've got nothing to say to you!",
+            options = {},
+            onESC = true
+        })
+        SetNuiFocus(true, true)
+        Wait(5000)
+        CloseMenu(data.menuID)
+        currentMenuID = nil
+        if data.freeze then
+            FreezeEntityPosition(entity, false)
+        end
+        return false
+    end
+
     callbackFunctions[data.menuID].onESC = data.onESC
     local duration = Config.DefaultTypeDelay
     if data.speechOptions and data.speechOptions.duration then
@@ -190,12 +262,12 @@ function PedInteraction(entity, data)
         title = data.title,
         menuID = data.menuID,
         position = data.position,
-        sliderState = data.sliderState or 'disabled', -- default slider state (options: 'locked', 'unlocked', 'disabled')
+        sliderState = data.sliderState or 'disabled',
         sliderValue = data.sliderValue or false,
         speech = data.speech or false,
         speechOptions = data.speechOptions or nil,
         duration = duration,
-        options = serializableOptions,
+        options = filteredOptions,
         onESC = data.onESC ~= nil
     })
     SetNuiFocus(true, true)
@@ -365,7 +437,7 @@ function InteractionPoint(position, data)
                 options = {},
                 distance = data.distance,
                 currentOption = 1,
-                radius = data.radius or 1.0, -- Add radius parameter with default of 1.0
+                radius = data.radius or 1.0,
             }
             for _, option in ipairs(data.options) do
                 table.insert(interactionPoints[data.name].options, option)
@@ -386,7 +458,7 @@ function InteractionEntity(entity, data)
                 options = {},
                 distance = data[1].distance,
                 currentOption = 1,
-                radius = data[1].radius or 1.0, -- Add radius parameter with default of 1.0
+                radius = data[1].radius or 1.0,
                 entity = entity or nil
             }
             for _, option in ipairs(data[1].options) do
@@ -394,6 +466,36 @@ function InteractionEntity(entity, data)
             end
         else
             print('No name provided for interaction point')
+        end
+    end
+end
+
+---@param model string - The model hash to be used as the interaction point.
+---@param data table - Table containing interaction options like slider state, speech, and position.
+function InteractionModel(model, data)
+    if not data or not data[1] or not data[1].name then
+        print('Invalid data provided for interaction model')
+        return
+    end
+
+    local models = type(model) == 'table' and model or {model}
+
+    for _, modelHash in ipairs(models) do
+        local model = modelHash
+        if type(modelHash) == 'string' then
+            model = GetHashKey(modelHash)
+        end
+        local name = data[1].name..'_'..model
+        interactionModelData[name] = {
+            name = name,
+            options = {},
+            distance = data[1].distance,
+            currentOption = 1,
+            radius = data[1].radius or 1.0,
+            model = model
+        }
+        for _, option in ipairs(data[1].options) do
+            table.insert(interactionModelData[name].options, option)
         end
     end
 end
@@ -452,11 +554,43 @@ CreateThread(function()
             DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 255, 0, 0, 100)
         end
 
+        -- Check for model interactions
+        for _, modelInteraction in pairs(interactionModelData) do
+            if hit and hitEntity > 0 then
+                local hitType = GetEntityType(hitEntity)
+                local success, hitModel = false, nil
+                if hitType > 0 then
+                    success, hitModel = pcall(function()
+                        return GetEntityModel(hitEntity)
+                    end)
+                end
+                if success and hitModel then
+                    if hitModel == modelInteraction.model then
+                        modelInteraction.entity = hitEntity
+                        local entityCoords = GetEntityCoords(hitEntity)
+                        local myCoords = GetEntityCoords(ped)
+                        if entityCoords then
+                            local distance = #(myCoords - entityCoords)
+                            local hitDistance = #(hitPosition - entityCoords)
+                            if hitDistance < (modelInteraction.radius or 1.0) and distance < modelInteraction.distance then
+                                minDistance = distance
+                                closestPoint = modelInteraction
+                                if debug and closestPoint then
+                                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                                end 
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
         for _, npc in pairs(interactionPedData) do
             local entityCoords = GetEntityCoords(npc.entity)
-            local distance = #(coords - entityCoords)
+            local myCoords = GetEntityCoords(ped)
+            local distance = #(myCoords - entityCoords)
             local hitDistance = #(hitPosition - entityCoords)
-            if distance < npc.distance and hitDistance < (npc.radius or 1.0) and distance < minDistance then
+            if distance < npc.distance and hitDistance < (npc.radius or 1.0) and distance < (interactionPedData.distance or 2.0) then
                 minDistance = distance
                 closestPoint = npc
                 if debug and closestPoint then
@@ -479,15 +613,36 @@ CreateThread(function()
 
         if closestPoint then
             if lastPointData ~= closestPoint then
-                lastPointData = closestPoint
-                currentPointData = closestPoint
-                currentLabel = closestPoint.options[closestPoint.currentOption].label
-                ShowText(currentLabel, true, currentPointData.options)
+                -- Filter visible options when first looking at point
+                local visibleOptions = {}
+                for _, option in ipairs(closestPoint.options) do
+                    local shouldInclude = true
+                    if option.canSee then
+                        shouldInclude = option.canSee(closestPoint.entity)
+                    end
+                    if shouldInclude then
+                        table.insert(visibleOptions, option)
+                    end
+                end
+                
+                -- Only proceed if there are visible options
+                if #visibleOptions > 0 then
+                    lastPointData = closestPoint
+                    currentPointData = closestPoint
+                    -- Store filtered options and reset current option index
+                    currentPointData.visibleOptions = visibleOptions
+                    currentPointData.currentOption = 1
+                    ShowText(visibleOptions[1].label, true, visibleOptions)
+                else
+                    HideText()
+                    lastPointData = nil
+                    currentPointData = nil
+                end
             end
         else
             if lastPointData then
                 ShowText(currentLabel, false, nil)
-                lib.hideTextUI()
+                HideText()
                 lastPointData = nil
                 currentPointData = nil
             end
@@ -514,6 +669,7 @@ function CloseMenu(menuID, speech)
         if cam then
             SetCamActive(cam, false)
             RenderScriptCams(false, true, 1000, 1, 1)
+            DestroyCam(cam, true)
         end
         cam = nil
         SetNuiFocus(false, false)
@@ -542,7 +698,7 @@ end
 -- Checks if any percentage bar is open.
 ---@return boolean - Whether any percentage bar is open.
 function IsAnyPercentBarOpen()
-    return #percentState > 0
+    return next(percentState) ~= nil
 end
 
 -- Closes all open menus and percentage bars.
@@ -589,18 +745,11 @@ AddEventHandler('onResourceStop', function(resourceName)
     for _, ped in pairs(spawnedPeds) do
         DeleteEntity(ped)
     end
-    lib.hideTextUI()
+    HideText()
 end)
 
-RegisterCommand('+interact', function()
-    if not currentPointData or not currentPointData.options then
-        return
-    end
-    currentPointData.options[currentPointData.currentOption].selected(currentPointData)
-end, false)
-
 RegisterCommand('+scrollDown', function()
-    if not currentPointData or not currentPointData.options then
+    if not currentPointData or not currentPointData.visibleOptions then
         return
     end
     local currentTime = GetGameTimer()
@@ -608,32 +757,16 @@ RegisterCommand('+scrollDown', function()
         return
     end
     scrollCooldownTimer = currentTime
-    local numberOfOptions = #currentPointData.options
+    local numberOfOptions = #currentPointData.visibleOptions
     currentPointData.currentOption = currentPointData.currentOption + 1
     if currentPointData.currentOption > numberOfOptions then
         currentPointData.currentOption = numberOfOptions
     end
-    currentLabel = currentPointData.options[currentPointData.currentOption].label
-    ShowText(currentLabel, true, currentPointData.options)
-end, false)
-
-RegisterCommand('-scrollUp', function()
-    return
-end, false)
-
-RegisterCommand('+interact', function()
-    if not currentPointData or not currentPointData.options then
-        return
-    end
-    currentPointData.options[currentPointData.currentOption].selected(currentPointData)
-end, false)
-
-RegisterCommand('-interact', function()
-    return
+    ShowText(currentPointData.visibleOptions[currentPointData.currentOption].label, true, currentPointData.visibleOptions)
 end, false)
 
 RegisterCommand('+scrollUp', function()
-    if not currentPointData or not currentPointData.options then
+    if not currentPointData or not currentPointData.visibleOptions then
         return
     end
     local currentTime = GetGameTimer()
@@ -645,8 +778,20 @@ RegisterCommand('+scrollUp', function()
     if currentPointData.currentOption < 1 then
         currentPointData.currentOption = 1
     end
-    currentLabel = currentPointData.options[currentPointData.currentOption].label
-    ShowText(currentLabel, true, currentPointData.options)
+    ShowText(currentPointData.visibleOptions[currentPointData.currentOption].label, true, currentPointData.visibleOptions)
+end, false)
+
+RegisterCommand('+interact', function()
+    if not currentPointData or not currentPointData.visibleOptions then
+        return
+    end
+    local currentOption = currentPointData.visibleOptions[currentPointData.currentOption]
+    HideText()
+    currentOption.selected(currentPointData)
+end, false)
+
+RegisterCommand('-scrollUp', function()
+    return
 end, false)
 
 RegisterCommand('-scrollDown', function()
@@ -673,10 +818,9 @@ RegisterNuiCallback('selectOption', function(data, cb)
     local key = data.key
     local speech = data.speech
     local reaction = data.reaction
+
     if reaction and currentPed then
-            StopCurrentPlayingAmbientSpeech(currentPed)
-        Wait(500)
-        PlayAmbientSpeech1(currentPed, reaction, 'SPEECH_PARAMS_STANDARD')
+            PlaySpeech(currentPed, reaction, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
     end
     if speech then
         UpdateSpeech(menuID, speech)
@@ -752,6 +896,9 @@ RegisterNuiCallback('escPressed', function(data, cb)
 end)
 
 RegisterCommand('toggleDebug', function()
+    if not Config.EnableDebugLine then
+        return
+    end
     debug = not debug
     if debug then
         wait = 0
@@ -799,4 +946,5 @@ exports('CloseAllMenus', CloseAllMenus)
 
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
+exports('InteractionModel', InteractionModel)
 exports('GetInteractionPed', GetInteractionPed)

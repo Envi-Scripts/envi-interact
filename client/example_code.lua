@@ -33,6 +33,9 @@ RegisterCommand('testChoice', function()
             {
                 key = 'J',
                 label = 'That Other One',
+                canSee = function()  -- example of a function to check if the option can be used
+                    return false
+                end,
                 selected = function(data)
                     print('Pressed J')
                 end,
@@ -425,6 +428,7 @@ local ped = exports['envi-interact']:CreateNPC({   -- Table of NPC Data
             label = 'You Got Sliders?',
             speech = 'The "UseSlider" export allows you to easily create a slider that can be used to select a value between a minimum and maximum value. This could be used for anything your heart desires!',
             stayOpen = true,
+            
             reaction = 'GENERIC_SHOCKED_MED',
             selected = function(data)
                 exports['envi-interact']:UpdateSpeech(data.menuID, 'Hell Yeah! We Got Sliders! You can use sliders to select a value between a minimum and maximum value and then use the confirm function to execute code using the new and old value selected. Try it out!')
@@ -1002,3 +1006,99 @@ local npcRelationship = 30
             },
         }
     })
+
+
+    CreateThread(function()
+        exports['envi-interact']:InteractionModel(GetHashKey('prop_atm_01'), {
+            {
+                name = 'atm_interaction',
+                distance = 2.0,
+                radius = 5.0,
+                options = {
+                    {
+                        label = '[E] - Use ATM',
+                        selected = function(data)
+                            exports['envi-interact']:OpenChoiceMenu({
+                                title = 'ATM Menu',
+                                menuID = 'atm_menu',
+                                speech = 'Welcome to the ATM. What do you want to do?',
+                                position = 'right',
+                                options = {
+                                    {
+                                        key = 'W',
+                                        label = 'Withdraw Money',
+                                        selected = function(data)
+                                            -- Handle withdrawal logic
+                                            exports['envi-interact']:UpdateSpeech('atm_menu', 'Please enter the amount to withdraw')
+                                        end,
+                                        canSee = function()
+                                            local hasItem = Framework.HasItem('bank_card')
+                                            if hasItem then
+                                                return true
+                                            else
+                                                return false
+                                            end
+                                        end
+                                    },
+                                    {
+                                        key = 'D',
+                                        label = 'Deposit Money',
+                                        selected = function(data)
+                                            -- Handle deposit logic
+                                            exports['envi-interact']:UpdateSpeech('atm_menu', 'Please enter the amount to deposit')
+                                        end
+                                    },
+                                    {
+                                        key = 'C',
+                                        label = 'Check Balance',
+                                        selected = function(data)
+                                            -- Handle balance check
+                                            exports['envi-interact']:UpdateSpeech('atm_menu', 'Your current balance is $5,000')
+                                        end
+                                    }
+                                }
+                            })
+                        end,
+                    },
+                    {
+                        label = '[E] - Deposit Cheque',
+                        selected = function(data)
+                            exports['envi-interact']:OpenChoiceMenu({
+                                title = 'Deposit Cheque',
+                                menuID = 'deposit_cheque',
+                                position = 'right',
+                                options = {
+                                    {
+                                        key = 'E',
+                                        label = 'Deposit Cheque',
+                                        selected = function(data)
+                                            exports['envi-interact']:UpdateSpeech('deposit_cheque', 'Please enter the amount to deposit')
+                                        end
+                                    }
+                                }
+                            })
+                        end,
+                    },
+                    {
+                        label = '[E] - Rob ATM',
+                        selected = function(data)
+                            exports['envi-interact']:OpenChoiceMenu({
+                                title = 'Rob ATM',
+                                menuID = 'rob_atm',
+                                position = 'right',
+                                options = {
+                                    {
+                                        key = 'E',
+                                        label = 'Rob ATM',
+                                        selected = function(data)
+                                            exports['envi-interact']:UpdateSpeech('rob_atm', 'Please enter the amount to rob')
+                                        end
+                                    }
+                                }
+                            })
+                        end,
+                    }
+                }
+            }
+        })
+    end) 
