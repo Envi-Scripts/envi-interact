@@ -483,7 +483,7 @@ function InteractionModel(model, data)
     for _, modelHash in ipairs(models) do
         local model = modelHash
         if type(modelHash) == 'string' then
-            model = GetHashKey(modelHash)
+            model = joaat(modelHash)
         end
         local name = data[1].name..'_'..model
         interactionModelData[name] = {
