@@ -781,7 +781,7 @@ RegisterCommand('+scrollUp', function()
     ShowText(currentPointData.visibleOptions[currentPointData.currentOption].label, true, currentPointData.visibleOptions)
 end, false)
 
-RegisterCommand('+interact', function()
+RegisterCommand('interact', function()
     if not currentPointData or not currentPointData.visibleOptions then
         return
     end
@@ -799,7 +799,7 @@ RegisterCommand('-scrollDown', function()
 end, false)
 
 
-RegisterKeyMapping('+interact', 'Envi-Interact - Interact', 'keyboard', 'E')
+RegisterKeyMapping('interact', 'Envi-Interact - Interact', 'keyboard', 'E')
 RegisterKeyMapping('+scrollDown', 'Envi-Interact - Scroll Down', 'MOUSE_WHEEL', 'IOM_WHEEL_DOWN')
 RegisterKeyMapping('+scrollUp', 'Envi-Interact - Scroll Up', 'MOUSE_WHEEL', 'IOM_WHEEL_UP')
 
