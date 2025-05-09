@@ -483,7 +483,7 @@ function InteractionModel(model, data)
     for _, modelHash in ipairs(models) do
         local model = modelHash
         if type(modelHash) == 'string' then
-            model = GetHashKey(modelHash)
+            model = joaat(modelHash)
         end
         local name = data[1].name..'_'..model
         interactionModelData[name] = {
@@ -781,7 +781,7 @@ RegisterCommand('+scrollUp', function()
     ShowText(currentPointData.visibleOptions[currentPointData.currentOption].label, true, currentPointData.visibleOptions)
 end, false)
 
-RegisterCommand('+interact', function()
+RegisterCommand('interact', function()
     if not currentPointData or not currentPointData.visibleOptions then
         return
     end
@@ -799,7 +799,7 @@ RegisterCommand('-scrollDown', function()
 end, false)
 
 
-RegisterKeyMapping('+interact', 'Envi-Interact - Interact', 'keyboard', 'E')
+RegisterKeyMapping('interact', 'Envi-Interact - Interact', 'keyboard', 'E')
 RegisterKeyMapping('+scrollDown', 'Envi-Interact - Scroll Down', 'MOUSE_WHEEL', 'IOM_WHEEL_DOWN')
 RegisterKeyMapping('+scrollUp', 'Envi-Interact - Scroll Up', 'MOUSE_WHEEL', 'IOM_WHEEL_UP')
 
