@@ -1,7 +1,7 @@
 Config = {}
 Config.TextState = false
 Config.CurrentLabel = nil
-Config.DefaultTypeDelay = 2000 -- 2 Seconds
+Config.DefaultTypeDelay = 1500 -- 1.5 Seconds
 Config.EnableDebugLine = false
 ShownNoti = false
 

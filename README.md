@@ -481,6 +481,134 @@ exports['envi-interact']:InteractionModel(GetHashKey('prop_atm_01'), {
 })
 ```
 
+# Global Interactions - Envi-Interact
+
+Added support for global interactions that apply to categories of entities rather than specific entities or models.
+
+## New Exports
+
+### InteractionGlobalVehicle
+Adds interaction options to **all vehicles** in the game world.
+
+```lua
+exports['envi-interact']:InteractionGlobalVehicle({
+    name = 'vehicle-inspection',
+    distance = 3.0,          -- Maximum distance to show interaction
+    radius = 2.0,            -- Raycast hit radius
+    options = {
+        {
+            label = '[E] - Inspect Vehicle',
+            selected = function(data)
+                local vehicle = data.entity
+                local plate = GetVehicleNumberPlateText(vehicle)
+                print('Vehicle plate: ' .. plate)
+            end,
+        }
+    }
+})
+```
+
+#### Bone Validation (Vehicles Only)
+- **Optional `bones` parameter**: Array of bone names/indices OR single bone name
+- **Distance Thresholds**: 
+  - Single bone: 2.0 units from bone
+  - Multiple bones: 1.0 units from closest bone
+- **Vehicle Bones**: Common vehicle bones include:
+  - `door_dside_f` - Driver front door
+  - `door_pside_f` - Passenger front door  
+  - `door_dside_r` - Driver rear door
+  - `door_pside_r` - Passenger rear door
+  - `bonnet` - Engine/hood area
+  - `boot` - Trunk/boot area
+  - `engine` - Engine block
+- **Usage**: Only triggers interaction when raycast hits within threshold of specified bones 
+
+### InteractionGlobalPed
+Adds interaction options to **all non-player peds** (NPCs) in the game world.
+
+```lua
+exports['envi-interact']:InteractionGlobalPed({
+    name = 'npc-interaction',
+    distance = 2.5,
+    radius = 1.5,
+    options = {
+        {
+            label = '[E] - Talk to NPC',
+            selected = function(data)
+                local ped = data.entity
+                exports['envi-interact']:PlaySpeech(ped, 'Hello', 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+            end,
+        }
+    }
+})
+```
+
+### InteractionGlobalPlayer
+Adds interaction options to **all other players** in the game world.
+
+```lua
+exports['envi-interact']:InteractionGlobalPlayer({
+    name = 'player-interaction',
+    distance = 3.0,
+    radius = 2.0,
+    options = {
+        {
+            label = '[E] - Wave at Player',
+            selected = function(data)
+                local targetPlayer = data.entity
+                local playerId = NetworkGetPlayerIndexFromPed(targetPlayer)
+                local playerName = GetPlayerName(playerId)
+                print('Waved at ' .. playerName)
+            end,
+        }
+    }
+})
+```
+
+## Removal Functions
+
+### Remove Specific Global Interactions
+```lua
+exports['envi-interact']:RemoveInteractionGlobalVehicle('vehicle-inspection')
+exports['envi-interact']:RemoveInteractionGlobalPed('npc-interaction')  
+exports['envi-interact']:RemoveInteractionGlobalPlayer('player-interaction')
+```
+
+### Remove All Global Interactions
+```lua
+exports['envi-interact']:RemoveAllGlobalInteractions()
+```
+
+## Features
+
+- **Entity Detection**: Automatically detects entity types (vehicles, peds, players)
+- **Player Filtering**: GlobalPed only affects NPCs, GlobalPlayer only affects other players (not yourself)
+- **canSee Support**: Use `canSee` functions in options to conditionally show interactions
+- **Distance & Radius**: Configurable detection distance and raycast radius
+- **Multiple Options**: Support for multiple interaction options per global type
+
+## Example Commands
+
+The `client/example_code.lua` file includes test commands:
+
+- `/addGlobalVehicleInteraction` - Add vehicle interactions
+- `/addGlobalPedInteraction` - Add NPC interactions  
+- `/addGlobalPlayerInteraction` - Add player interactions
+- `/removeGlobalInteractions` - Remove specific interactions
+- `/removeAllGlobalInteractions` - Clear all global interactions
+
+## Integration
+
+Global interactions work alongside existing interaction systems:
+- `InteractionPoint` - Specific world positions
+- `InteractionEntity` - Specific entities
+- `InteractionModel` - Specific entity models
+- `InteractionGlobalVehicle` - All vehicles
+- `InteractionGlobalPed` - All NPCs
+- `InteractionGlobalPlayer` - All players
+
+The system prioritizes interactions by distance, showing the closest available interaction. 
+
 Key features:
 - Works with any instance of the specified model in the game world
 - Automatically detects when the player is looking at the model

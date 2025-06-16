@@ -1,15 +1,15 @@
 fx_version 'cerulean'
 
 author 'Envi-Scripts'
-description 'Interaction Menus'
-version '1.2.0'
+description 'Interaction Library'
+version '1.2.5'
 
 game 'gta5'
 lua54 'yes'
  
 client_scripts {
 	'client/pedPersonality.lua',
-	'client/*.lua',
+	'client/client.lua',
 }
  
 shared_scripts {

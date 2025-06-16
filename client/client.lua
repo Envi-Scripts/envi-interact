@@ -22,6 +22,9 @@ local lastInteraction = 0
 local optionCooldown = 2000 -- 2 seconds
 local interactionPedData = {}
 local interactionModelData = {}
+local interactionGlobalVehicleData = {}
+local interactionGlobalPedData = {}
+local interactionGlobalPlayerData = {}
 
 local speechCategories = {
     ["PositiveReaction"] = PositiveReaction,
@@ -492,11 +495,70 @@ function InteractionModel(model, data)
             distance = data[1].distance,
             currentOption = 1,
             radius = data[1].radius or 1.0,
-            model = model
+            model = model,
+            bones = data[1].bones or {}
         }
         for _, option in ipairs(data[1].options) do
             table.insert(interactionModelData[name].options, option)
         end
+    end
+end
+
+---@param data table - Table containing interaction options for all vehicles.
+function InteractionGlobalVehicle(data)
+    if not data or not data.name then
+        print('Invalid data provided for global vehicle interaction')
+        return
+    end
+
+    interactionGlobalVehicleData[data.name] = {
+        name = data.name,
+        options = {},
+        distance = data.distance or 2.0,
+        currentOption = 1,
+        radius = data.radius or 1.0,
+        bones = data.bones or {}
+    }
+    for _, option in ipairs(data.options) do
+        table.insert(interactionGlobalVehicleData[data.name].options, option)
+    end
+end
+
+---@param data table - Table containing interaction options for all non-player peds.
+function InteractionGlobalPed(data)
+    if not data or not data.name then
+        print('Invalid data provided for global ped interaction')
+        return
+    end
+
+    interactionGlobalPedData[data.name] = {
+        name = data.name,
+        options = {},
+        distance = data.distance or 2.0,
+        currentOption = 1,
+        radius = data.radius or 1.0
+    }
+    for _, option in ipairs(data.options) do
+        table.insert(interactionGlobalPedData[data.name].options, option)
+    end
+end
+
+---@param data table - Table containing interaction options for all players.
+function InteractionGlobalPlayer(data)
+    if not data or not data.name then
+        print('Invalid data provided for global player interaction')
+        return
+    end
+
+    interactionGlobalPlayerData[data.name] = {
+        name = data.name,
+        options = {},
+        distance = data.distance or 2.0,
+        currentOption = 1,
+        radius = data.radius or 1.0
+    }
+    for _, option in ipairs(data.options) do
+        table.insert(interactionGlobalPlayerData[data.name].options, option)
     end
 end
 
@@ -537,9 +599,53 @@ local RayCastGamePlayCamera = function(distance)
     return b, c, e
 end
 
+--- Validates if hit position is within range of specified bones
+---@param entity number The entity to check bones on
+---@param hitPosition vector3 The hit position to validate
+---@param bones table Table of bone names or indices to check
+---@return boolean True if within range of any specified bone
+local function ValidateBoneProximity(entity, hitPosition, myCoords, bones, radius, distance)
+    if not bones or #bones == 0 then
+        return true -- No bone validation required
+    end
+    -- single bone (string)
+    if type(bones) == 'string' then
+        local boneId = GetEntityBoneIndexByName(entity, bones)
+        if boneId ~= -1 and #(hitPosition - GetEntityBonePosition_2(entity, boneId)) <= radius or 0.5 and #(myCoords - hitPosition) <= distance or 2.0 then
+            return true
+        else
+            return false
+        end
+    end
+    --  multiple bones (table)
+    if type(bones) == 'table' then
+        local closestBone, boneDistance
+        for i = 1, #bones do
+            local bone = bones[i]
+            local boneId
+            if type(bone) == 'string' then
+                boneId = GetEntityBoneIndexByName(entity, bone)
+            else
+                boneId = bone
+            end
+            if boneId ~= -1 then
+                local dist = #(hitPosition - GetEntityBonePosition_2(entity, boneId))
+                if dist <= (boneDistance or 1.0) then
+                    closestBone = boneId
+                    boneDistance = dist
+                end
+            end
+        end
+        if closestBone then
+            return true
+        else
+            return false
+        end
+    end
+    return false
+end
+
 -------------------------------------------------
-
-
 
 CreateThread(function()
     local lastPointData = nil
@@ -551,7 +657,8 @@ CreateThread(function()
         local coords = GetEntityCoords(ped)
 
         if debug and hit and hitPosition and not closestPoint then
-            DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 255, 0, 0, 100)
+            local coords = GetEntityCoords(hitEntity)
+            DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 255, 0, 0, 100)
         end
 
         -- Check for model interactions
@@ -576,8 +683,88 @@ CreateThread(function()
                                 minDistance = distance
                                 closestPoint = modelInteraction
                                 if debug and closestPoint then
-                                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
-                                end 
+                                    local coords = GetEntityCoords(hitEntity)
+                                    DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Check for global vehicle interactions
+        for _, globalVehicleInteraction in pairs(interactionGlobalVehicleData) do
+            if hit and hitEntity > 0 then
+                local hitType = GetEntityType(hitEntity)
+                if hitType == 2 then -- Vehicle entity type
+                    globalVehicleInteraction.entity = hitEntity
+                    local entityCoords = GetEntityCoords(hitEntity)
+                    local myCoords = GetEntityCoords(ped)
+                    if entityCoords then
+                        local distance = #(myCoords - entityCoords)
+                        local hitDistance = #(hitPosition - entityCoords)
+                        local boneValid = ValidateBoneProximity(hitEntity, hitPosition, myCoords, globalVehicleInteraction.bones, globalVehicleInteraction.radius, globalVehicleInteraction.distance)
+                        if hitDistance < (globalVehicleInteraction.radius or 1.0) and distance < globalVehicleInteraction.distance and distance < minDistance and boneValid then
+                            minDistance = distance
+                            closestPoint = globalVehicleInteraction
+                            if debug and closestPoint then
+                                local coords = GetEntityCoords(hitEntity)
+                                DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Check for global ped interactions (non-player peds)
+        for _, globalPedInteraction in pairs(interactionGlobalPedData) do
+            if hit and hitEntity > 0 then
+                local hitType = GetEntityType(hitEntity)
+                if hitType == 1 then
+                    local isPlayer = IsPedAPlayer(hitEntity)
+                    if not isPlayer then -- Only non-player peds
+                        globalPedInteraction.entity = hitEntity
+                        local entityCoords = GetEntityCoords(hitEntity)
+                        local myCoords = GetEntityCoords(ped)
+                        if entityCoords then
+                            local distance = #(myCoords - entityCoords)
+                            local hitDistance = #(hitPosition - entityCoords)
+                            if hitDistance < (globalPedInteraction.radius or 1.0) and distance < globalPedInteraction.distance and distance < minDistance then
+                                minDistance = distance
+                                closestPoint = globalPedInteraction
+                                if debug and closestPoint then
+                                    local coords = GetEntityCoords(hitEntity)
+                                    DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Check for global player interactions
+        for _, globalPlayerInteraction in pairs(interactionGlobalPlayerData) do
+            if hit and hitEntity > 0 then
+                local hitType = GetEntityType(hitEntity)
+                if hitType == 1 then
+                    local isPlayer = IsPedAPlayer(hitEntity)
+                    if isPlayer and hitEntity ~= ped then -- Only other players, not self
+                        globalPlayerInteraction.entity = hitEntity
+                        local entityCoords = GetEntityCoords(hitEntity)
+                        local myCoords = GetEntityCoords(ped)
+                        if entityCoords then
+                            local distance = #(myCoords - entityCoords)
+                            local hitDistance = #(hitPosition - entityCoords)
+                            if hitDistance < (globalPlayerInteraction.radius or 1.0) and distance < globalPlayerInteraction.distance and distance < minDistance then
+                                minDistance = distance
+                                closestPoint = globalPlayerInteraction
+                                if debug and closestPoint then
+                                    local coords = GetEntityCoords(hitEntity)
+                                    DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                                end
                             end
                         end
                     end
@@ -594,7 +781,8 @@ CreateThread(function()
                 minDistance = distance
                 closestPoint = npc
                 if debug and closestPoint then
-                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                    local coords = GetEntityCoords(hitEntity)
+                    DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
                 end
             end
         end
@@ -606,14 +794,14 @@ CreateThread(function()
                 minDistance = distance
                 closestPoint = interactionPoint
                 if debug and closestPoint then
-                    DrawLine(GetEntityCoords(ped), hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
+                    local coords = GetEntityCoords(hitEntity)
+                    DrawLine(coords.x, coords.y, coords.z, hitPosition.x, hitPosition.y, hitPosition.z, 0, 255, 0, 100)
                 end
             end
         end
 
         if closestPoint then
             if lastPointData ~= closestPoint then
-                -- Filter visible options when first looking at point
                 local visibleOptions = {}
                 for _, option in ipairs(closestPoint.options) do
                     local shouldInclude = true
@@ -624,12 +812,10 @@ CreateThread(function()
                         table.insert(visibleOptions, option)
                     end
                 end
-                
-                -- Only proceed if there are visible options
+
                 if #visibleOptions > 0 then
                     lastPointData = closestPoint
                     currentPointData = closestPoint
-                    -- Store filtered options and reset current option index
                     currentPointData.visibleOptions = visibleOptions
                     currentPointData.currentOption = 1
                     ShowText(visibleOptions[1].label, true, visibleOptions)
@@ -922,6 +1108,43 @@ end, false)
 
 RegisterKeyMapping('toggleDebug', 'Envi-Interact - Debug Vision', 'keyboard', 'RMENU')
 
+--- Removes a global vehicle interaction by name.
+---@param name string The name of the global vehicle interaction to remove.
+function RemoveInteractionGlobalVehicle(name)
+    if interactionGlobalVehicleData[name] then
+        interactionGlobalVehicleData[name] = nil
+        return true
+    end
+    return false
+end
+
+--- Removes a global ped interaction by name.
+---@param name string The name of the global ped interaction to remove.
+function RemoveInteractionGlobalPed(name)
+    if interactionGlobalPedData[name] then
+        interactionGlobalPedData[name] = nil
+        return true
+    end
+    return false
+end
+
+--- Removes a global player interaction by name.
+---@param name string The name of the global player interaction to remove.
+function RemoveInteractionGlobalPlayer(name)
+    if interactionGlobalPlayerData[name] then
+        interactionGlobalPlayerData[name] = nil
+        return true
+    end
+    return false
+end
+
+--- Removes all global interactions.
+function RemoveAllGlobalInteractions()
+    interactionGlobalVehicleData = {}
+    interactionGlobalPedData = {}
+    interactionGlobalPlayerData = {}
+end
+
 --- Exports functions to be accessible from other scripts.
 exports('OpenChoiceMenu', OpenChoiceMenu)
 
@@ -947,4 +1170,11 @@ exports('CloseAllMenus', CloseAllMenus)
 exports('InteractionPoint', InteractionPoint)
 exports('InteractionEntity', InteractionEntity)
 exports('InteractionModel', InteractionModel)
+exports('InteractionGlobalVehicle', InteractionGlobalVehicle)
+exports('InteractionGlobalPed', InteractionGlobalPed)
+exports('InteractionGlobalPlayer', InteractionGlobalPlayer)
 exports('GetInteractionPed', GetInteractionPed)
+exports('RemoveInteractionGlobalVehicle', RemoveInteractionGlobalVehicle)
+exports('RemoveInteractionGlobalPed', RemoveInteractionGlobalPed)
+exports('RemoveInteractionGlobalPlayer', RemoveInteractionGlobalPlayer)
+exports('RemoveAllGlobalInteractions', RemoveAllGlobalInteractions)
