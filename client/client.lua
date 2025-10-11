@@ -134,6 +134,9 @@ function CreateNPC(pedData, interactionData)
     while not DoesEntityExist(ped) do
         Wait(100)
     end
+    if GetResourceState('envi-zombies') == 'started' then
+        exports['envi-zombies']:DoNotZombify(ped)
+    end
     table.insert(spawnedPeds, ped)
     interactionPeds[interactionData.menuID] = ped
     if pedData.isFrozen then
@@ -212,6 +215,8 @@ function PedInteraction(entity, data)
     end
     if data.greeting then
         PlaySpeech(entity, data.greeting, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+    else
+        SpeakAnim(entity, 3000)
     end
     local serializableOptions = {}
     local filteredOptions = {}
@@ -246,6 +251,7 @@ function PedInteraction(entity, data)
             onESC = true
         })
         SetNuiFocus(true, true)
+        SpeakAnim(entity, 5000)
         Wait(5000)
         CloseMenu(data.menuID)
         currentMenuID = nil
@@ -260,6 +266,7 @@ function PedInteraction(entity, data)
     if data.speechOptions and data.speechOptions.duration then
         duration = data.speechOptions.duration
     end
+    SpeakAnim(entity, duration)
     SendNUIMessage({
         action = 'openPedMenu',
         title = data.title,
@@ -370,10 +377,29 @@ function ForceUpdateSlider(menuID, sliderValue)
     })
 end
 
+function SpeakAnim(ped, duration)
+    CreateThread(function()
+        if not duration then
+            duration = 2000
+        end
+        RequestAnimDict("mp_facial")
+        while not HasAnimDictLoaded("mp_facial") do
+            Wait(100)
+        end
+        PlayFacialAnim(ped, "mic_chatter", "mp_facial")
+        Wait(duration)
+        PlayFacialAnim(ped, "mood_normal_1", "facials@gen_male@variations@normal")
+        RemoveAnimDict("mp_facial")
+    end)
+end
+
 -- Updates the speech bubble for a menu.
 ---@param menuID string The ID of the menu to update the speech bubble for.
 ---@param speech string The new speech bubble text.
-function UpdateSpeech(menuID, speech, duration)
+function UpdateSpeech(menuID, speech, duration, ped)
+    if ped and DoesEntityExist(ped) then
+        SpeakAnim(ped, duration)
+    end
     SendNUIMessage({
         menuID = menuID,
         action = 'updateSpeech',
@@ -385,6 +411,7 @@ function UpdateSpeech(menuID, speech, duration)
         Wait(500)
     end
     Wait(500)
+
 end
 
 --- Displays a percentage bar as a separate menu.
@@ -843,7 +870,9 @@ end)
 function CloseMenu(menuID, speech)
     if menuState[menuID] then
         if speech then
-            UpdateSpeech(menuID, speech)
+            local duration = 2000
+            local ped = currentPed
+            UpdateSpeech(menuID, speech, duration, ped)
         end
         SendNUIMessage({
             action = 'closeMenu',
@@ -1004,12 +1033,15 @@ RegisterNuiCallback('selectOption', function(data, cb)
     local key = data.key
     local speech = data.speech
     local reaction = data.reaction
-
+    local ped = data.ped
+    local duration = data.duration
     if reaction and currentPed then
-            PlaySpeech(currentPed, reaction, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+        PlaySpeech(currentPed, reaction, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+    elseif currentPed and DoesEntityExist(currentPed) then
+        SpeakAnim(currentPed, 3000)
     end
     if speech then
-        UpdateSpeech(menuID, speech)
+        UpdateSpeech(menuID, speech, duration, ped)
     end
     if callbackFunctions[menuID] and callbackFunctions[menuID][key] then
         callbackFunctions[menuID][key](data)
