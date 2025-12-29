@@ -2,6 +2,8 @@ let i = 0;
 let typingComplete = false;
 let currentMenuID = null;
 let keysBusy = false;
+let isTyping = false;
+let keysPressed = {};
 
 $(function() {
   function typeWriter(textParam, callback, element, totalDuration) {
@@ -9,13 +11,22 @@ $(function() {
     const text = textParam;
     const baseDelay = calculateDynamicDelay(text.length);
     const dynamicDelay = totalDuration ? (totalDuration / text.length) : baseDelay;
+    
+    isTyping = true;
   
     function type() {
       if (i < text.length) {
-        $(element).append(text.charAt(i));
+        const char = text.charAt(i);
+        if (char === '\n') {
+          $(element).append('<br>');
+        } else {
+          $(element).append(char);
+        }
+        
         i++;
         setTimeout(type, dynamicDelay);
       } else {
+        isTyping = false;
         callback();
       }
     }
@@ -48,6 +59,8 @@ $(function() {
     keysBusy = false;
     i = 0;
     typingComplete = false;
+    isTyping = false;
+    keysPressed = {};
     
     $(`.choice__menu`).remove();
     $(`.bubble__chat--wrapper`).remove();
@@ -61,7 +74,7 @@ $(function() {
           <div class="choice__title">${data.title}</div>
           <div class="option__wrapper">
             ${data.options.map(option => `
-              <div class="option__item" data-key="${option.key}" data-stay-open="${option.stayOpen}" data-close-all=${option.closeAll}>
+              <div class="option__item ${data.speech ? 'disabled' : ''}" data-key="${option.key}" data-stay-open="${option.stayOpen}" data-close-all=${option.closeAll}>
                 <div class="option__key">${option.key}</div>
                 <div class="option__content">${option.label}</div>
               </div>
@@ -81,8 +94,11 @@ $(function() {
         </div>
       `);
       $(`.bubble__chat--wrapper[data-menu-id="${data.menuID}"]`).fadeIn("150", function() {
+        $(".option__item").addClass('disabled');
+        
         typeWriter(data.speech, () => {
           typingComplete = true;
+          isTyping = false;
           $(".option__item").removeClass('disabled');
           $('.slider__wrapper').find(".slider").prop('disabled', false).removeClass('locked');
           $('.slider__wrapper').find(".slider__submit").prop('disabled', false).removeClass('locked');
@@ -91,12 +107,13 @@ $(function() {
     }
      else {
       typingComplete = true;
+      isTyping = false;
     };
     $(".choice__menu").fadeIn("150");
     keysBusy = false;
     $(".option__item").on('click', function(e) {
       e.preventDefault();
-      if (!typingComplete) return;
+      if (isTyping || !typingComplete || $(this).hasClass('disabled') || keysBusy) return;
       keysBusy = true;
       
       let getStayOpen = $(this).data('stay-open');
@@ -104,10 +121,18 @@ $(function() {
 
       if (!getStayOpen) {
         $(".choice__menu").fadeOut("150");
+        $(document).off('keydown');
+        $(document).off('keyup');
+        keysBusy = true;
       }
 
-      const key = $(this).data('key');
+      const key = String($(this).data('key')); // makin sure key is a string
+      console.log('Click handler: Looking for option with key:', key, 'in options:', data.options.map(opt => opt.key));
       const option = data.options.find(opt => opt.key === key);
+      if (!option) {
+        console.error('Option not found for key:', key, 'Available keys:', data.options.map(opt => opt.key));
+        return;
+      }
       const speech = option.speech;
       const reaction = option.reaction;
 
@@ -130,17 +155,59 @@ $(function() {
     });
 
     $(document).off('keydown').on('keydown', function(e) {
-      if (!typingComplete || keysBusy) return;
-      keysBusy = true;
-      setTimeout(() => {
-        keysBusy = false;
-      }, 1500);
-      const pressedKey = String.fromCharCode(e.which);
-      const option = data.options.find(opt => opt.key === pressedKey);
-      const speech = $(this).data('speech');
-      const reaction = $(this).data('reaction');
+      if (e.which === 27) {
+        e.preventDefault();
+        if (data.onESC) {
+          $.post('https://envi-interact/escPressed', JSON.stringify({
+            menuID: data.menuID
+          }));
+        }
+        isTyping = false;
+        typingComplete = false;
+        closeAllMenus();
+        return;
+      }
+      
+      if (isTyping) {
+        e.preventDefault();
+        return;
+      }
+      
+      if (!typingComplete || keysBusy) {
+        e.preventDefault();
+        return;
+      }
 
+      const pressedKey = String.fromCharCode(e.which);
+      const option = data.options.find(opt => String(opt.key) === pressedKey);
+      
       if (option) {
+        if (keysPressed[pressedKey]) {
+          e.preventDefault();
+          return;
+        }
+        
+        keysPressed[pressedKey] = true;
+        
+        const $item = $(`.option__item[data-key="${option.key}"]`);
+        if ($item.hasClass('disabled')) {
+          e.preventDefault();
+          return;
+        }
+        
+        if (isTyping) {
+          e.preventDefault();
+          return;
+        }
+        
+        keysBusy = true;
+        setTimeout(() => {
+          keysBusy = false;
+        }, 1500);
+        
+        const speech = option.speech;
+        const reaction = option.reaction;
+        
         e.preventDefault();
         $(".option__item").removeClass('active');
         const $activeItem = $(`.option__item[data-key="${option.key}"]`).addClass('active');
@@ -149,6 +216,9 @@ $(function() {
         let getCloseAll = $activeItem.data('close-all');
         if (!getStayOpen) {
           $(".choice__menu").fadeOut("150");
+          $(document).off('keydown');
+          $(document).off('keyup');
+          keysBusy = true;
         }
 
         $.post('https://envi-interact/selectOption', JSON.stringify({
@@ -160,20 +230,14 @@ $(function() {
           stayOpen: getStayOpen,
           reaction: reaction
         }));
-      } else if (e.which === 27) {
-        e.preventDefault();
-        if (data.onESC) {
-          $.post('https://envi-interact/escPressed', JSON.stringify({
-            menuID: data.menuID
-          }));
-        }
-        closeAllMenus();
       }
     });
 
     $(document).off('keyup').on('keyup', function(e) {
       const pressedKey = String.fromCharCode(e.which);
-      const option = data.options.find(opt => opt.key === pressedKey);
+      const option = data.options.find(opt => String(opt.key) === pressedKey);
+
+      keysPressed[pressedKey] = false;
 
       if (option) {
         const $activeItem = $(`.option__item[data-key="${option.key}"]`);
@@ -208,14 +272,26 @@ $(function() {
   };
 
   function updateSpeech(data) {
+    if (isTyping) {
+      console.warn('Blocked updateSpeech: typewriter animation already in progress');
+      return;
+    }
+    
     i = 0;
     typingComplete = false;
+    keysBusy = false;
+    isTyping = true;
+    $(".option__item").addClass('disabled');
+    $('.slider__wrapper').find(".slider").prop('disabled', true).addClass('locked');
+    $('.slider__wrapper').find(".slider__submit").prop('disabled', true).addClass('locked');
+    
     const textElement = `#text-${data.menuID}`;
   
     $(textElement).empty();
     
     typeWriter(data.speech, () => {
       typingComplete = true;
+      isTyping = false;
       $(".option__item").removeClass('disabled');
       $('.slider__wrapper').find(".slider").prop('disabled', false).removeClass('locked');
       $('.slider__wrapper').find(".slider__submit").prop('disabled', false).removeClass('locked');
@@ -381,6 +457,15 @@ $(function() {
   };
 
   function closeMenu(data) {
+    isTyping = false;
+    typingComplete = false;
+    keysBusy = false;
+    keysPressed = {};
+    
+    $(document).off('keydown');
+    $(document).off('keyup');
+    $(".option__item").off('click');
+    
     let $menu = $(`.choice__menu[data-choice-menu="${data.menuID}"]`);
     let $percentage = $(`.percentage__wrapper[data-percent-id="${data.percentID}"]`);
 
@@ -402,6 +487,15 @@ $(function() {
     if (!data || !data.menuID) {
       return;
     }
+    
+    isTyping = false;
+    typingComplete = false;
+    keysPressed = {};
+    
+    $(document).off('keydown');
+    $(document).off('keyup');
+    $(".option__item").off('click');
+    
     let $menu = $(`.choice__menu[data-choice-menu="${data.menuID}"]`);
     let $percentage = $(`.percentage__wrapper[data-percent-id="${data.percentID}"]`);
         $menu.fadeOut("150");
@@ -417,6 +511,15 @@ $(function() {
 
 
   function closeAllMenus() {
+    isTyping = false;
+    typingComplete = false;
+    keysBusy = false;
+    keysPressed = {};
+    
+    $(document).off('keydown');
+    $(document).off('keyup');
+    $(".option__item").off('click');
+    
     $(".choice__menu").fadeOut("150");
     $(".percentage__wrapper").fadeOut("150");
     $(".bubble__chat--wrapper").fadeOut("150", function() {
@@ -434,11 +537,19 @@ $(function() {
 
   window.addEventListener('message', function(e) {
     let data = e?.data;
-  
+
+    // Debug logging
+    if (data.action === 'openChoiceMenu') {
+      console.log('Received openChoiceMenu with', data.options?.length || 0, 'options:');
+      data.options?.forEach((opt, i) => {
+        console.log('Option', i, '- key:', opt.key, 'label:', opt.label);
+      });
+    }
+
     switch (data.action) {
       case "openChoiceMenu":
         createChoiceMenu(data);
-        break; // Added break here
+        break;
       case "openPedMenu":
         createChoiceMenu(data);
         break;

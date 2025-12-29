@@ -107,6 +107,14 @@ function OpenChoiceMenu(data)
     if data.speechOptions and data.speechOptions.duration then
         duration = data.speechOptions.duration
     end
+    -- Debug logging for option serialization
+    if debug then
+        print('OpenChoiceMenu: Sending', #filteredOptions, 'options to NUI')
+        for i, opt in ipairs(filteredOptions) do
+            print('Option', i, '- key:', opt.key, 'label:', opt.label)
+        end
+    end
+
     SendNUIMessage({
         action = 'openChoiceMenu',
         speech = data.speech,
@@ -139,6 +147,7 @@ function CreateNPC(pedData, interactionData)
     end
     table.insert(spawnedPeds, ped)
     interactionPeds[interactionData.menuID] = ped
+    pedData.ped = ped
     if pedData.isFrozen then
         Wait(950)
         FreezeEntityPosition(ped, true)
@@ -396,14 +405,21 @@ end
 -- Updates the speech bubble for a menu.
 ---@param menuID string The ID of the menu to update the speech bubble for.
 ---@param speech string The new speech bubble text.
-function UpdateSpeech(menuID, speech, duration, ped)
-    if ped and DoesEntityExist(ped) then
-        SpeakAnim(ped, duration)
+---@param duration number The duration of the speech animation.
+---@param reaction string Optional reaction speech for the ped to perform.
+function UpdateSpeech(menuID, speech, duration, reaction)
+    local typeDelay = duration or Config.DefaultTypeDelay
+    local freeze = true
+    if currentPed and DoesEntityExist(currentPed) then
+        if reaction then
+            PlaySpeech(currentPed, reaction, 'SPEECH_PARAMS_FORCE_NORMAL_CLEAR')
+        end
+        SpeakAnim(currentPed, duration)
     end
     SendNUIMessage({
         menuID = menuID,
         action = 'updateSpeech',
-        duration = duration or Config.DefaultTypeDelay,
+        duration = typeDelay,
         speech = speech
     })
     waitingForSpeech[menuID] = true
@@ -411,7 +427,7 @@ function UpdateSpeech(menuID, speech, duration, ped)
         Wait(500)
     end
     Wait(500)
-
+    freeze = false
 end
 
 --- Displays a percentage bar as a separate menu.
@@ -872,7 +888,7 @@ function CloseMenu(menuID, speech)
         if speech then
             local duration = 2000
             local ped = currentPed
-            UpdateSpeech(menuID, speech, duration, ped)
+            UpdateSpeech(menuID, speech, duration, nil)
         end
         SendNUIMessage({
             action = 'closeMenu',
@@ -1041,7 +1057,7 @@ RegisterNuiCallback('selectOption', function(data, cb)
         SpeakAnim(currentPed, 3000)
     end
     if speech then
-        UpdateSpeech(menuID, speech, duration, ped)
+        UpdateSpeech(menuID, speech, duration, nil)
     end
     if callbackFunctions[menuID] and callbackFunctions[menuID][key] then
         callbackFunctions[menuID][key](data)
