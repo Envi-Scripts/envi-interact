@@ -174,6 +174,7 @@ function CreateNPC(pedData, interactionData)
         exports['ox_target']:addLocalEntity(ped, {
             label = 'Talk',
             icon = 'fas fa-handshake',
+            distance = interactionData.distance or 2.0,
             onSelect = function()
                 PedInteraction(ped, interactionData)
             end
