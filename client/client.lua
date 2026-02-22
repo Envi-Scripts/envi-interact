@@ -154,21 +154,31 @@ function CreateNPC(pedData, interactionData)
         SetBlockingOfNonTemporaryEvents(ped, true)
         SetEntityInvincible(ped, true)
     end
-    InteractionEntity(ped, {
-        {
-            name = interactionData.menuID,
-            distance = interactionData.distance or 2.0,
-            radius = interactionData.radius or 1.5,
-            options = {
-                {
-                    label = '[E] - Talk',
-                    selected = function(data)
-                        PedInteraction(ped, interactionData)
-                    end,
+    if not Config.OxTargetEntities then
+        InteractionEntity(ped, {
+            {
+                name = interactionData.menuID,
+                distance = interactionData.distance or 2.0,
+                radius = interactionData.radius or 1.5,
+                options = {
+                    {
+                        label = '[E] - Talk',
+                        selected = function(data)
+                            PedInteraction(ped, interactionData)
+                        end,
+                    }
                 }
             }
-        }
-    })
+        })
+    else
+        exports['ox_target']:addLocalEntity(ped, {
+            label = 'Talk',
+            icon = 'fas fa-handshake',
+            onSelect = function()
+                PedInteraction(ped, interactionData)
+            end
+        })
+    end
     return ped
 end
 

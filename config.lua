@@ -5,6 +5,9 @@ Config.DefaultTypeDelay = 1500 -- 1.5 Seconds
 Config.EnableDebugLine = false
 ShownNoti = false
 
+-- New Ox Target Option --
+Config.OxTargetEntities = false
+
 function ShowText(label, state, options)
     if state == TextState and label == CurrentLabel then
         return
